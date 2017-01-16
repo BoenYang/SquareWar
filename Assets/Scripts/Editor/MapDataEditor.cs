@@ -12,6 +12,10 @@ public class MapDataEditor : EditorWindow
 
     private static float winWidth = 800;
 
+    private int currentSelectPlayerIndex = 0;
+
+    private string[] playersName;
+
     [MenuItem("Tools/ShowMapData")]
     public static void Show()
     {
@@ -35,13 +39,11 @@ public class MapDataEditor : EditorWindow
 
     void OnGUI()
     {
-        //        GUI.Label(new Rect(400,200,100,50),new GUIContent("200"));
-
-        //        GUI.Label(new Rect(400,100, 100, 50), new GUIContent("100"));
         if (Application.isPlaying)
         {
             if (MapMng.Instance != null)
             {
+                DrawPlayerPopup();
                
                 DrawMapData();
 
@@ -52,9 +54,19 @@ public class MapDataEditor : EditorWindow
         }
     }
 
+    private void DrawPlayerPopup()
+    {
+        playersName = new string[MapMng.Instance.Players.Count];
+        for (int i = 0; i < MapMng.Instance.Players.Count; i++)
+        {
+            playersName[i] = MapMng.Instance.Players[i].Name;
+        }
+        currentSelectPlayerIndex = EditorGUI.Popup(new Rect(100, 10, 100, 50), currentSelectPlayerIndex, playersName);
+    }
+
     private void DrawMapData()
     {
-        int[,] mapData = MapMng.Instance.mapData;
+        int[,] mapData = MapMng.Instance.Players[currentSelectPlayerIndex].TypeMap;
 
         if (mapData != null)
         {
@@ -74,7 +86,7 @@ public class MapDataEditor : EditorWindow
 
     private void DrawSquareSpriteData()
     {
-        SquareSprite[,] squareMap = MapMng.Instance.squareSpriteMap;
+        SquareSprite[,] squareMap = MapMng.Instance.Players[currentSelectPlayerIndex].SquareMap;
 
         if (squareMap != null)
         {

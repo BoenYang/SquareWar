@@ -4,39 +4,17 @@ using UnityEngine;
 
 public class PlayerBase
 {
+    public string Name = "";
 
-    public enum MoveDir
-    {
-        Left = 1,
-        Right = 2,
-    }
+    public int Score = 0;
 
-    public enum RemoveDir
-    {
-        Vertical = 1,
-        Horizontal = 2,
-    }
+    public int[,] TypeMap = null;
 
-    public class RemoveData
-    {
-        public int StartRow;
-        public int StartColumn;
-        public int Count;
-        public RemoveDir Dir;
+    public SquareSprite[,] SquareMap = null;
 
-        public override string ToString()
-        {
-            return string.Format("第{0}行,第{1}列，消除数量{2}", StartRow, StartColumn, Count);
-        }
-    }
+    public bool IsRobot { get { return isRobot; } }
 
-    public string Name;
-
-    public int[,] TypeMap;
-
-    public SquareSprite[,] SquareMap;
-
-    public int Score;
+    protected bool isRobot = false;
 
     private MapMng mapMng;
 
@@ -44,26 +22,21 @@ public class PlayerBase
 
     private List<SquareSprite[]> squareWillInsert;
 
-    private List<RemoveData> removingData = new List<RemoveData>();
+    private List<SquareSprite.RemoveData> removingData = new List<SquareSprite.RemoveData>();
 
     private Transform squareRoot;
 
-    private int insertedRawCount;
+    private Vector3 pos = Vector3.zero;
 
-    private float moveIntervalTimer;
-
-    public bool IsRobot
-    {
-        get { return isRobot; }
-    }
-
-    protected bool isRobot = false;
+    private int insertedRawCount = 0;
 
     private int raw;
 
     private int column;
 
-    private Vector3 pos = Vector3.zero;
+    private float moveIntervalTimer;
+
+    private bool gameOver = false;
 
     public void SetMapdata(int[,] map)
     {
@@ -81,10 +54,9 @@ public class PlayerBase
         }
     }
 
- 
-
     public void InitMap(MapMng mapMng)
     {
+        Debug.Log("init player " + Name + " map");
         this.mapMng = mapMng;
         this.squareWillInsert = new List<SquareSprite[]>();
 
@@ -136,6 +108,10 @@ public class PlayerBase
 
     #region 插入行算法
 
+    public bool NeedAddNewRaw()
+    {
+        return squareWillInsert.Count == 0;
+    }
 
     public void InsertRowAtIndex(int insertRowIndex,SquareSprite[] squareData)
     {
@@ -145,7 +121,7 @@ public class PlayerBase
             return;
         }
 
-        insertedRawCount++;
+
         for (int r = 1; r <= insertRowIndex; r++)
         {
             for (int c = 0; c < column; c++)
@@ -174,6 +150,22 @@ public class PlayerBase
 
     public void InsertRowAtBottom()
     {
+        if (squareWillInsert.Count == 0)
+        {
+            return;
+        }
+
+        insertedRawCount++;
+        Debug.Log(Name + "inserted raw count " + insertedRawCount);
+        for (int c = 0; c < TypeMap.GetLength(1); c++)
+        {
+            if(TypeMap[0,c] != 0)
+            {
+                gameOver = true;
+                return;
+            }
+        }
+
         InsertRowAtIndex(TypeMap.GetLength(0) - 1,squareWillInsert[0]);
         squareWillInsert.RemoveAt(0);
     }
@@ -185,13 +177,12 @@ public class PlayerBase
             Debug.LogError("数据格式不合法");
             return;
         }
-
+    
         SquareSprite[] insertRawSquare = new SquareSprite[SquareMap.GetLength(1)];
         for (int i = 0; i < insertRawData.Length; i++)
         {
-            Vector3 pos = GetPos(raw+ insertedRawCount, i);
-            int type = Random.Range(1, 5);
-            insertRawSquare[i] = SquareSprite.CreateSquare(type, -1, i);
+            Vector3 pos = GetPos(raw + insertedRawCount, i);
+            insertRawSquare[i] = SquareSprite.CreateSquare(insertRawData[i], -1, i);
             insertRawSquare[i].transform.SetParent(squareRoot);
             insertRawSquare[i].transform.localPosition = pos;
             insertRawSquare[i].transform.localScale = Vector3.one * 0.9f;
@@ -212,12 +203,12 @@ public class PlayerBase
 
     #region 方块移动
 
-    public void MoveSquare(SquareSprite movingSquare, MoveDir dir)
+    public void MoveSquare(SquareSprite movingSquare, SquareSprite.MoveDir dir)
     {
         int raw = movingSquare.Row;
         int currentColumn = movingSquare.Column;
         int targetColumn = currentColumn;
-        if (dir == MoveDir.Left)
+        if (dir == SquareSprite.MoveDir.Left)
         {
             if (movingSquare.Column != 0)
             {
@@ -287,11 +278,11 @@ public class PlayerBase
 
     #region 消除核心算法
 
-    private void MarkWillRemove(RemoveData removeData)
+    private void MarkWillRemove(SquareSprite.RemoveData removeData)
     {
         for (int i = 0; i < removeData.Count; i++)
         {
-            if (removeData.Dir == RemoveDir.Horizontal)
+            if (removeData.Dir == SquareSprite.RemoveDir.Horizontal)
             {
                 SquareSprite squareNeedRemove = SquareMap[removeData.StartRow, removeData.StartColumn + i];
                 squareNeedRemove.MarkWillRemove();
@@ -304,17 +295,17 @@ public class PlayerBase
         }
     }
 
-    private void Remove(RemoveData removeData)
+    private void Remove(SquareSprite.RemoveData removeData)
     {
         mapMng.StartCoroutine(RemoveCorutine(removeData));
     }
 
-    private IEnumerator RemoveCorutine(RemoveData removeData)
+    private IEnumerator RemoveCorutine(SquareSprite.RemoveData removeData)
     {
         yield return new WaitForSeconds(GameSetting.BaseMapMoveInterval);
         for (int i = 0; i < removeData.Count; i++)
         {
-            if (removeData.Dir == RemoveDir.Horizontal)
+            if (removeData.Dir == SquareSprite.RemoveDir.Horizontal)
             {
                 SquareSprite squareNeedRemove = SquareMap[removeData.StartRow, removeData.StartColumn + i];
                 squareNeedRemove.ShowRemoveEffect();
@@ -331,7 +322,7 @@ public class PlayerBase
         removingData.Remove(removeData);
         for (int i = 0; i < removeData.Count; i++)
         {
-            if (removeData.Dir == RemoveDir.Horizontal)
+            if (removeData.Dir == SquareSprite.RemoveDir.Horizontal)
             {
                 SquareMap[removeData.StartRow, removeData.StartColumn + i].Remove();
                 SquareMap[removeData.StartRow, removeData.StartColumn + i] = null;
@@ -382,11 +373,11 @@ public class PlayerBase
                     {
                         if (typeCount >= 3)
                         {
-                            RemoveData removeData = new RemoveData();
+                            SquareSprite.RemoveData removeData = new SquareSprite.RemoveData();
                             removeData.StartRow = r;
                             removeData.StartColumn = c;
                             removeData.Count = typeCount;
-                            removeData.Dir = RemoveDir.Horizontal;
+                            removeData.Dir = SquareSprite.RemoveDir.Horizontal;
                             removingData.Add(removeData);
                             MarkWillRemove(removeData);
                             Remove(removeData);
@@ -398,11 +389,11 @@ public class PlayerBase
 
                 if (typeCount >= 3 && i == column && SquareMap[r, i - 1].CanRemove())
                 {
-                    RemoveData removeData = new RemoveData();
+                    SquareSprite.RemoveData removeData = new SquareSprite.RemoveData();
                     removeData.StartRow = r;
                     removeData.StartColumn = c;
                     removeData.Count = typeCount;
-                    removeData.Dir = RemoveDir.Horizontal;
+                    removeData.Dir = SquareSprite.RemoveDir.Horizontal;
                     removingData.Add(removeData);
                     MarkWillRemove(removeData);
                     Remove(removeData);
@@ -443,11 +434,11 @@ public class PlayerBase
                     {
                         if (typeCount >= 3)
                         {
-                            RemoveData removeData = new RemoveData();
+                            SquareSprite.RemoveData removeData = new SquareSprite.RemoveData();
                             removeData.StartRow = r;
                             removeData.StartColumn = c;
                             removeData.Count = typeCount;
-                            removeData.Dir = RemoveDir.Vertical;
+                            removeData.Dir = SquareSprite.RemoveDir.Vertical;
                             removingData.Add(removeData);
                             MarkWillRemove(removeData);
                             Remove(removeData);
@@ -459,11 +450,11 @@ public class PlayerBase
 
                 if (typeCount >= 3 && i == raw && SquareMap[i - 1, c].CanRemove())
                 {
-                    RemoveData removeData = new RemoveData();
+                    SquareSprite.RemoveData removeData = new SquareSprite.RemoveData();
                     removeData.StartRow = r;
                     removeData.StartColumn = c;
                     removeData.Count = typeCount;
-                    removeData.Dir = RemoveDir.Vertical;
+                    removeData.Dir = SquareSprite.RemoveDir.Vertical;
                     removingData.Add(removeData);
                     MarkWillRemove(removeData);
                     Remove(removeData);
@@ -497,7 +488,7 @@ public class PlayerBase
         }
     }
 
-    private void MoveMap()
+    protected void MoveMap()
     {
         if (removingData.Count != 0)
         {
@@ -549,6 +540,11 @@ public class PlayerBase
         DropSquare();
         CheckRemove();
         MoveMap();
+    }
+
+    public bool CheckGameOver()
+    {
+        return gameOver;
     }
 
     #endregion

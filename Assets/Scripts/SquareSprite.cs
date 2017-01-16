@@ -3,6 +3,31 @@ using UnityEngine;
 
 public class SquareSprite : MonoBehaviour
 {
+    public enum MoveDir
+    {
+        Left = 1,
+        Right = 2,
+    }
+
+    public enum RemoveDir
+    {
+        Vertical = 1,
+        Horizontal = 2,
+    }
+
+    public class RemoveData
+    {
+        public int StartRow;
+        public int StartColumn;
+        public int Count;
+        public RemoveDir Dir;
+
+        public override string ToString()
+        {
+            return string.Format("第{0}行,第{1}列，消除数量{2}", StartRow, StartColumn, Count);
+        }
+    }
+
     public delegate void MoveEndCallBack();
 
     public delegate void MoveNextNullCallBack(SquareSprite square);
@@ -76,7 +101,7 @@ public class SquareSprite : MonoBehaviour
 
     public void OnMouseUp()
     {
-        if (Row < 0)
+        if (Row < 0 || player.IsRobot)
         {
             return;
         }
@@ -85,8 +110,7 @@ public class SquareSprite : MonoBehaviour
 
         if (Mathf.Abs(xDistance) > 30 && !isAnimating)
         {
-            PlayerBase.MoveDir dir = xDistance > 0 ? PlayerBase.MoveDir.Right : PlayerBase.MoveDir.Left;
-            //            MapMng.Instance.MoveSquare(this, dir);
+            MoveDir dir = xDistance > 0 ? MoveDir.Right : MoveDir.Left;
             player.MoveSquare(this,dir);
         }
     }

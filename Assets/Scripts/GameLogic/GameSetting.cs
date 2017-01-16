@@ -10,4 +10,8 @@ public static class GameSetting
 
     public static float SquareRemoveInterval = 0.5f;
 
+    public static int RawCount = 11;
+
+    public static int ColumnCount = 6;
+
 }

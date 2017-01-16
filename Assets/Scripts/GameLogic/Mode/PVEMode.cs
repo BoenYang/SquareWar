@@ -1,4 +1,6 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 
 public class PVEMode : GameModeBase
 {
@@ -9,6 +11,13 @@ public class PVEMode : GameModeBase
 
     public override void Init()
     {
+        NormalPlayer player = new NormalPlayer();
+        RobotPlayer robotPlayer = new RobotPlayer();
+        List<PlayerBase> players = new List<PlayerBase>();
+        robotPlayer.SetMapPos(new Vector3(10,0,0));
+        players.Add(player);
+        players.Add(robotPlayer);
+        MapMng.Instance.SetPlayer(players);
         MapMng.Instance.InitMap(Mode);
     }
 
