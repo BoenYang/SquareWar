@@ -56,7 +56,6 @@ public class PlayerBase
 
     public void InitMap(MapMng mapMng)
     {
-        Debug.Log("init player " + Name + " map");
         this.mapMng = mapMng;
         this.squareWillInsert = new List<SquareSprite[]>();
 
@@ -155,8 +154,7 @@ public class PlayerBase
             return;
         }
 
-        insertedRawCount++;
-        Debug.Log(Name + "inserted raw count " + insertedRawCount);
+
         for (int c = 0; c < TypeMap.GetLength(1); c++)
         {
             if(TypeMap[0,c] != 0)
@@ -165,7 +163,8 @@ public class PlayerBase
                 return;
             }
         }
-
+        insertedRawCount++;
+        Debug.Log(Name + "inserted raw count " + insertedRawCount);
         InsertRowAtIndex(TypeMap.GetLength(0) - 1,squareWillInsert[0]);
         squareWillInsert.RemoveAt(0);
     }
@@ -177,11 +176,11 @@ public class PlayerBase
             Debug.LogError("数据格式不合法");
             return;
         }
-    
+        Debug.Log(Name + "Add a will insert raw");
         SquareSprite[] insertRawSquare = new SquareSprite[SquareMap.GetLength(1)];
         for (int i = 0; i < insertRawData.Length; i++)
         {
-            Vector3 pos = GetPos(raw + insertedRawCount, i);
+            Vector3 pos = GetPos(raw + insertedRawCount + squareWillInsert.Count, i);
             insertRawSquare[i] = SquareSprite.CreateSquare(insertRawData[i], -1, i);
             insertRawSquare[i].transform.SetParent(squareRoot);
             insertRawSquare[i].transform.localPosition = pos;
@@ -527,7 +526,6 @@ public class PlayerBase
                         TypeMap[s.Row, s.Column] = s.Type;
                         SquareMap[s.Row - s.NextNullCount, s.Column] = null;
                         SquareMap[s.Row, s.Column] = s;
-                        //Check();
                     });
                 }
             }
