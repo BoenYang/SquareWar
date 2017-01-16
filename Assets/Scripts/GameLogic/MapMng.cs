@@ -115,29 +115,44 @@ public class MapMng : MonoBehaviour
     public void InitMap(GameMode mode)
     {
         RandomGenerateMapData();
-    
-        for (int r = 0; r < RowCount; r++)
+
+        willInsertRaw = new int[ColumnCount];
+        for (int i = 0; i < ColumnCount; i++)
         {
-            for (int c = 0; c < ColumnCount; c++)
-            {
-                if (mapData[r, c] != 0)
-                {
-                    Vector3 pos = GetPos(r,c);
-                    SquareSprite ss = SquareSprite.CreateSquare(mapData[r, c],r,c);
-                    ss.transform.SetParent(trCache);
-                    ss.transform.localPosition = pos;
-                    ss.transform.localScale = Vector3.one * 0.9f;
-                    ss.name = "Rect[" + r + "," + c + "]";
-                    squareSpriteMap[r, c] = ss;
-                    squareSpriteMap[r, c].gameObject.layer = trCache.gameObject.layer;
-                }
-                else
-                {
-                    squareSpriteMap[r, c] = null;
-                }
-            }
+            int type = Random.Range(1, 5);
+            willInsertRaw[i] = type;
         }
-        CreateAInsertRaw();
+
+        for (int i = 0; i < Players.Count; i++)
+        {
+            Players[i].SetMapdata(mapData);
+            Players[i].InitMap(this);
+            Players[i].AddWillInsertRaw(willInsertRaw);
+        }
+
+        //        for (int r = 0; r < RowCount; r++)
+        //        {
+        //            for (int c = 0; c < ColumnCount; c++)
+        //            {
+        //                if (mapData[r, c] != 0)
+        //                {
+        //                    Vector3 pos = GetPos(r, c);
+        //                    SquareSprite ss = SquareSprite.CreateSquare(mapData[r, c], r, c);
+        //                    ss.transform.SetParent(trCache);
+        //                    ss.transform.localPosition = pos;
+        //                    ss.transform.localScale = Vector3.one * 0.9f;
+        //                    ss.name = "Rect[" + r + "," + c + "]";
+        //                    squareSpriteMap[r, c] = ss;
+        //                    squareSpriteMap[r, c].gameObject.layer = trCache.gameObject.layer;
+        //                }
+        //                else
+        //                {
+        //                    squareSpriteMap[r, c] = null;
+        //                }
+        //            }
+        //        }
+        //        CreateAInsertRaw();
+
         StartCoroutine(MapUpdate());
     }
 
@@ -519,7 +534,7 @@ public class MapMng : MonoBehaviour
                 InsertRowAtBottom();
                 if (!gameOver)
                 {
-                    CreateAInsertRaw();
+                    //CreateAInsertRaw();
                 }
             }
         }
@@ -553,15 +568,20 @@ public class MapMng : MonoBehaviour
     {
         while (true)
         {
-            if (gameOver)
-            {
-                yield break;
-            }
+//            if (gameOver)
+//            {
+//                yield break;
+//            }
+//
+//            CalculateDropCount();   
+//            MoveSquare();
+//            CheckRemove();
+//            MoveMap();
 
-            CalculateDropCount();
-            MoveSquare();
-            CheckRemove();
-            MoveMap();
+            for (int i = 0; i < Players.Count; i++)
+            {
+                Players[i].UpdateMap();
+            }
             yield return new WaitForEndOfFrame();
         }
     }

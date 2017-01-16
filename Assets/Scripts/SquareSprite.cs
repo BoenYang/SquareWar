@@ -60,6 +60,11 @@ public class SquareSprite : MonoBehaviour
         return ss;
     }
 
+    public void SetPlayer(PlayerBase player)
+    {
+        this.player = player;
+    }
+
     public void OnMouseDown()
     {
         if (Row < 0)
@@ -80,8 +85,9 @@ public class SquareSprite : MonoBehaviour
 
         if (Mathf.Abs(xDistance) > 30 && !isAnimating)
         {
-            MapMng.MoveDir dir = xDistance > 0 ? MapMng.MoveDir.Right : MapMng.MoveDir.Left;
-            MapMng.Instance.MoveSquare(this, dir);
+            PlayerBase.MoveDir dir = xDistance > 0 ? PlayerBase.MoveDir.Right : PlayerBase.MoveDir.Left;
+            //            MapMng.Instance.MoveSquare(this, dir);
+            player.MoveSquare(this,dir);
         }
     }
 
