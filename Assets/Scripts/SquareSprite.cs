@@ -39,7 +39,6 @@ public class SquareSprite : MonoBehaviour
 
     private PlayerBase player;
 
-
     public static SquareSprite CreateSquare(int type, int r, int c)
     {
         GameObject go = new GameObject();

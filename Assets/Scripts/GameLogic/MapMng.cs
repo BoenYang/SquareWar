@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class MapMng : MonoBehaviour
 {
-
     public enum MoveDir
     {
         Left = 1,
@@ -13,8 +12,8 @@ public class MapMng : MonoBehaviour
 
     public enum RemoveDir
     {
-        Vertical    = 1,
-        Horizontal  = 2,
+        Vertical = 1,
+        Horizontal = 2,
     }
 
     public class RemoveData
@@ -26,7 +25,7 @@ public class MapMng : MonoBehaviour
 
         public override string ToString()
         {
-            return string.Format("第{0}行,第{1}列，消除数量{2}",StartRow,StartColumn,Count);
+            return string.Format("第{0}行,第{1}列，消除数量{2}", StartRow, StartColumn, Count);
         }
     }
 
@@ -142,7 +141,6 @@ public class MapMng : MonoBehaviour
         StartCoroutine(MapUpdate());
     }
 
-
     public void SetMapData(int[,] data)
     {
         mapData = data;
@@ -194,11 +192,10 @@ public class MapMng : MonoBehaviour
         {
             mapData[insertRowIndex, i] = rowData[i];
             squareData[i].Row = insertRowIndex;
+            squareData[i].SetGray(false);
             squareSpriteMap[insertRowIndex, i] = squareData[i];
-            willInsertSquare[i].SetGray(false);
         }
     }
-
 
     public void InsertRowAtBottom()
     {
@@ -241,7 +238,6 @@ public class MapMng : MonoBehaviour
             }
         }
     }
-
 
     private Vector3 GetPos(int r, int c)
     {
@@ -295,7 +291,6 @@ public class MapMng : MonoBehaviour
             s2.MoveToPos(moveToPos, 0.1f);
         }
     }
-
 
     private void MarkWillRemove(RemoveData removeData)
     {
@@ -478,7 +473,6 @@ public class MapMng : MonoBehaviour
                     removingData.Add(removeData);
                     MarkWillRemove(removeData);
                     Remove(removeData);
-                 
                     // Debug.LogFormat("第{0}行，第{1}列,重复数量{2}",r,c,typeCount);
                 }
             }

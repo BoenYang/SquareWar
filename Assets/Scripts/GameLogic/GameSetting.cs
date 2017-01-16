@@ -1,0 +1,13 @@
+﻿
+public static class GameSetting
+{
+
+    public static float SquareWidth = 0.64f;
+
+    public static float BaseMapMoveSpeed = 0.01f;
+
+    public static float BaseMapMoveInterval = 0.2f;
+
+    public static float SquareRemoveInterval = 0.5f;
+
+}
