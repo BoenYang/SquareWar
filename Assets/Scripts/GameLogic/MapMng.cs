@@ -69,8 +69,7 @@ public class MapMng : MonoBehaviour
 
         for (int i = 0; i < Players.Count; i++)
         {
-            Players[i].SetMapdata(mapData);
-            Players[i].InitMap(this);
+            Players[i].InitMap(this,mapData);
             Players[i].AddWillInsertRaw(willInsertRaw);
         }
         StartCoroutine(MapUpdate());
@@ -99,7 +98,7 @@ public class MapMng : MonoBehaviour
             {
                 Players[i].UpdateMap();
             }
-            yield return new WaitForEndOfFrame();
+            yield return 0;
         }
     }
 
@@ -130,10 +129,4 @@ public class MapMng : MonoBehaviour
         }
         return need;
     }
-
-    public void OnDrawGizmos()
-    {
-  
-    }
-
 }

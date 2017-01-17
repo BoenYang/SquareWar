@@ -3,6 +3,15 @@ using UnityEngine;
 
 public class SquareSprite : MonoBehaviour
 {
+    public enum SquareState
+    {
+        Static =    1,
+        Swap   =    2,
+        Fall   =    3,
+        Hung   =    4,
+        Clear  =    5,
+    }
+
     public enum MoveDir
     {
         Left = 1,
@@ -38,6 +47,8 @@ public class SquareSprite : MonoBehaviour
 
     public int Type;
 
+    public SquareState State;
+
     public int NextNullCount
     {
         get { return nextNullCount; }
@@ -64,24 +75,33 @@ public class SquareSprite : MonoBehaviour
 
     private PlayerBase player;
 
+    public bool MarkHorzontalChecked;
+
+    public bool MarkVerticalChecked;
+
     public static SquareSprite CreateSquare(int type, int r, int c)
     {
         GameObject go = new GameObject();
         SquareSprite ss = go.AddComponent<SquareSprite>();
         SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
         BoxCollider2D collider = go.AddComponent<BoxCollider2D>();
+
         if (sprites == null)
         {
             sprites = Resources.LoadAll<Sprite>("tiles_foreground");
         }
+
         sr.sortingLayerName = "Game";
         sr.sortingOrder = 2;
         sr.sprite = sprites[type - 1];
-        collider.size = new Vector2(0.7f, 0.7f);
+    
         ss.Column = c;
         ss.Row = r;
         ss.Type = type;
         ss.renderer = sr;
+        ss.State = SquareState.Static;
+
+        collider.size = new Vector2(0.7f, 0.7f);
         return ss;
     }
 
@@ -108,18 +128,20 @@ public class SquareSprite : MonoBehaviour
         mouseUpPos = Input.mousePosition;
         float xDistance = mouseUpPos.x - mouseDownPos.x;
 
-        if (Mathf.Abs(xDistance) > 30 && !isAnimating)
+        if (Mathf.Abs(xDistance) > 30 && CanSwap())
         {
             MoveDir dir = xDistance > 0 ? MoveDir.Right : MoveDir.Left;
-            player.MoveSquare(this,dir);
+            player.SwapSquare(this,dir);
         }
     }
 
     public void MoveToPos(Vector3 pos, float time, MoveEndCallBack callBack = null)
     {
+        State = SquareState.Swap;
         isAnimating = true;
         transform.DOLocalMove(pos, time).SetRelative(false).OnComplete(() =>
         {
+            State = SquareState.Static;
             isAnimating = false;
             if (callBack != null)
             {
@@ -131,7 +153,6 @@ public class SquareSprite : MonoBehaviour
     public void MoveToNextNullPos(Vector3 pos,float time, MoveNextNullCallBack callBack)
     {
         Row = Row + NextNullCount;
-     
         isAnimating = true;
         transform.DOLocalMove(pos, time).SetRelative(false).OnComplete(() =>
         {
@@ -146,7 +167,7 @@ public class SquareSprite : MonoBehaviour
 
     public void MarkWillRemove()
     {
-        isAnimating = true;
+        State = SquareState.Clear;
     }
 
     public void Remove()
@@ -181,7 +202,12 @@ public class SquareSprite : MonoBehaviour
 
     public bool CanRemove()
     {
-        return !IsAnimating && NextNullCount == 0;
+        return !isAnimating && State != SquareState.Fall && State != SquareState.Swap && State != SquareState.Clear && State != SquareState.Hung;
+    }
+
+    public bool CanSwap()
+    {
+        return !isAnimating && State == SquareState.Static;
     }
 
     public void SetGray(bool gray)
@@ -193,6 +219,78 @@ public class SquareSprite : MonoBehaviour
         else
         {
             renderer.color = Color.white;
+        }
+    }
+
+    public void Fall()
+    {
+        isAnimating = true;
+        Vector3 targetPos = transform.localPosition - new Vector3(0, GameSetting.SquareWidth, 0);
+        player.SquareMap[Row + 1, Column] = this;
+        player.SquareMap[Row, Column] = null;
+        transform.DOLocalMove(targetPos, 0.1f).SetRelative(false).OnComplete(() =>
+        {
+            Row = Row + 1;
+            isAnimating = false;
+        });
+    }
+
+    private float clearTime;
+
+    private float clearTimer;
+
+    public void UpdateState()
+    {
+        if (isAnimating)
+        {
+            return;
+        }
+
+        switch (State)
+        {
+            case SquareState.Static:
+            case SquareState.Swap:
+                if (Row == player.SquareMap.GetLength(0) - 1)
+                {
+                    State = SquareState.Static;
+                }
+                else
+                {
+                    SquareSprite under = player.SquareMap[Row + 1, Column];
+                    if (under == null)
+                    {
+                        State = SquareState.Fall;
+                    }
+                }
+                break;
+            case SquareState.Hung:
+                State = SquareState.Fall;
+                break;
+            case SquareState.Fall:
+                if (Row == player.SquareMap.GetLength(0) - 1)
+                {
+                    State = SquareState.Static;
+                }
+                else
+                {
+                    SquareSprite under = player.SquareMap[Row + 1, Column];
+                    if (under == null)
+                    {
+                        Fall();
+                    }
+                    else
+                    {
+                        if (under.State == SquareState.Clear)
+                        {
+                            State = SquareState.Static;
+                        }
+                        else
+                        {
+                            State = under.State;
+                        }
+                    }
+                }
+                break;
         }
     }
 }

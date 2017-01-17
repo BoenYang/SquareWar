@@ -28,7 +28,6 @@ public class MapDataEditor : EditorWindow
     [MenuItem("Tools/Test")]
     public static void SetCameraToZero()
     {
-        Debug.Log(SceneView.lastActiveSceneView == null);
         if (SceneView.lastActiveSceneView != null)
         {
             Debug.Log(SceneView.lastActiveSceneView.camera.transform.position);
@@ -45,8 +44,6 @@ public class MapDataEditor : EditorWindow
             {
                 DrawPlayerPopup();
                
-                DrawMapData();
-
                 DrawSquareSpriteData();
 
                 Repaint();
@@ -62,26 +59,6 @@ public class MapDataEditor : EditorWindow
             playersName[i] = MapMng.Instance.Players[i].Name;
         }
         currentSelectPlayerIndex = EditorGUI.Popup(new Rect(100, 10, 100, 50), currentSelectPlayerIndex, playersName);
-    }
-
-    private void DrawMapData()
-    {
-        int[,] mapData = MapMng.Instance.Players[currentSelectPlayerIndex].TypeMap;
-
-        if (mapData != null)
-        {
-            Vector2 startPos = new Vector2(100, startY);
-
-            for (int r = 0; r < mapData.GetLength(0); r++)
-            {
-                for (int c = 0; c < mapData.GetLength(1); c++)
-                {
-                    Vector2 pos = startPos + new Vector2(c * width, r * width);
-                    Vector2 size = Vector2.one * width;
-                    GUI.Label(new Rect(pos, size), new GUIContent("" + mapData[r, c]));
-                }
-            }
-        }
     }
 
     private void DrawSquareSpriteData()
@@ -125,7 +102,7 @@ public class MapDataEditor : EditorWindow
                     }
                     else
                     {
-                        string s = squareMap[r, c].CanRemove() ? "T" : "F";
+                        string s = squareMap[r, c].Type.ToString();
                         GUI.Label(new Rect(pos, size), new GUIContent(s));
                     }
                 }
@@ -146,7 +123,7 @@ public class MapDataEditor : EditorWindow
                     }
                     else
                     {
-                        string s = squareMap[r, c].NextNullCount + "";
+                        string s = ((int)squareMap[r, c].State) + "";
                         GUI.Label(new Rect(pos, size), new GUIContent(s));
                     }
                 }
