@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public enum GameMode
@@ -19,6 +20,8 @@ public enum GameResult
 
 public abstract class GameModeBase
 {
+    private List<PlayerBase> players = new List<PlayerBase>(); 
+
     public abstract GameMode Mode { get; }
 
     public abstract void Init();

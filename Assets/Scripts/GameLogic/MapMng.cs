@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Security.Policy;
+using System.Xml;
 using UnityEngine;
 
 public class MapMng : MonoBehaviour
@@ -40,7 +41,7 @@ public class MapMng : MonoBehaviour
             { 0,1,0,2,0,3},
             { 0,1,0,1,4,2},
             { 2,2,3,1,5,1},
-            { 5,3,4,2,1,2},
+            { 5,3,2,3,1,2},
             { 1,2,3,4,5,3},
         };
         return mapData;
@@ -79,7 +80,6 @@ public class MapMng : MonoBehaviour
     {
         while (true)
         {
-      
             if (IsGameOver())
             {
                 yield break;
@@ -98,7 +98,9 @@ public class MapMng : MonoBehaviour
             {
                 Players[i].UpdateMap();
             }
-            yield return 0;
+
+            yield return new WaitForEndOfFrame();
+
         }
     }
 

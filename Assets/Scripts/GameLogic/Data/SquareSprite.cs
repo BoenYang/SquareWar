@@ -49,9 +49,16 @@ public class SquareSprite : MonoBehaviour
 
     public SquareState State;
 
+    public bool Chain;
+
     public int NextNullCount
     {
         get { return nextNullCount; }
+    }
+
+    private bool IsBottom()
+    {
+        return Row == (player.SquareMap.GetLength(0) - 1);
     }
 
     private int nextNullCount;
@@ -75,9 +82,9 @@ public class SquareSprite : MonoBehaviour
 
     private PlayerBase player;
 
-    public bool MarkHorzontalChecked;
+    public bool HorizontalRemoved = false;
 
-    public bool MarkVerticalChecked;
+    public bool VerticalRemoved = false;
 
     public static SquareSprite CreateSquare(int type, int r, int c)
     {
@@ -200,9 +207,19 @@ public class SquareSprite : MonoBehaviour
         nextNullCount = nullCount;
     }
 
-    public bool CanRemove()
+    private bool CanRemove()
     {
-        return !isAnimating && State != SquareState.Fall && State != SquareState.Swap && State != SquareState.Clear && State != SquareState.Hung;
+        return !isAnimating && State != SquareState.Fall && State != SquareState.Swap  && State != SquareState.Hung ;
+    }
+
+    public bool CanVerticalRemove()
+    {
+        return (CanRemove() && !VerticalRemoved) ;
+    }
+
+    public bool CanHorizontalRemove()
+    {
+        return (CanRemove() && !HorizontalRemoved);
     }
 
     public bool CanSwap()
@@ -250,16 +267,25 @@ public class SquareSprite : MonoBehaviour
         {
             case SquareState.Static:
             case SquareState.Swap:
-                if (Row == player.SquareMap.GetLength(0) - 1)
+                if (IsBottom())
                 {
                     State = SquareState.Static;
+                    Chain = false;
                 }
                 else
                 {
                     SquareSprite under = player.SquareMap[Row + 1, Column];
                     if (under == null)
                     {
-                        State = SquareState.Fall;
+                        State = SquareState.Hung;
+                    }
+                    else if (under.State == SquareState.Hung)
+                    {
+                        Chain = under.Chain;
+                    }
+                    else
+                    {
+                        Chain = false;
                     }
                 }
                 break;
@@ -267,15 +293,17 @@ public class SquareSprite : MonoBehaviour
                 State = SquareState.Fall;
                 break;
             case SquareState.Fall:
-                if (Row == player.SquareMap.GetLength(0) - 1)
+                if (IsBottom())
                 {
                     State = SquareState.Static;
+                    Chain = false;
                 }
                 else
                 {
                     SquareSprite under = player.SquareMap[Row + 1, Column];
                     if (under == null)
                     {
+                        Chain = true;
                         Fall();
                     }
                     else
@@ -287,6 +315,10 @@ public class SquareSprite : MonoBehaviour
                         else
                         {
                             State = under.State;
+                            if (under.Chain)
+                            {
+                                Chain = under.Chain;
+                            }
                         }
                     }
                 }

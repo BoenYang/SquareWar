@@ -251,15 +251,25 @@ public class PlayerBase
 
     #region 消除核心算法
 
+    private List<SquareSprite> removeList = new List<SquareSprite>();
+
+    private List<SquareSprite.RemoveData> removeDataList = new List<SquareSprite.RemoveData>(); 
+
     private void CheckRemove()
     {
+        removeList.Clear();
+        removingData.Clear();
         CheckHorizontalRemove();
         CheckVerticalRemove();
+        CalculateScore();
     }
 
-    private void GetScore()
+    private void CalculateScore()
     {
-
+        if (removeList.Count > 0)
+        {
+  
+        }
     }
 
     private void CheckHorizontalRemove()
@@ -271,7 +281,7 @@ public class PlayerBase
             int typeCount = 0;
             for (int c = 0; c < column - 1; c++)
             {
-                if (SquareMap[r, c] == null)
+                if (SquareMap[r, c] == null || !SquareMap[r,c].CanHorizontalRemove())
                 {
                     continue;
                 }
@@ -284,7 +294,8 @@ public class PlayerBase
                 int i = c + 1;
                 for (i = c + 1; i < column; i++)
                 {
-                    if (SquareMap[r, i] != null && SquareMap[r, i].Type == firstType && SquareMap[r, i].CanRemove())
+                    SquareSprite checkingSuqare = SquareMap[r, i];
+                    if (checkingSuqare != null && checkingSuqare.Type == firstType && checkingSuqare.CanHorizontalRemove())
                     {
                         typeCount++;
                     }
@@ -298,6 +309,7 @@ public class PlayerBase
                             removeData.Count = typeCount;
                             removeData.Dir = SquareSprite.RemoveDir.Horizontal;
                             removingData.Add(removeData);
+                            removeDataList.Add(removeData);
                             MarkWillRemove(removeData);
                             Remove(removeData);
                         }
@@ -306,7 +318,8 @@ public class PlayerBase
                     }
                 }
 
-                if (typeCount >= 3 && i == column && SquareMap[r, i - 1] != null && SquareMap[r, i - 1].CanRemove())
+                SquareSprite lastSquare = SquareMap[r, i - 1];
+                if (typeCount >= 3 && i == column && lastSquare != null && lastSquare.CanHorizontalRemove())
                 {
                     SquareSprite.RemoveData removeData = new SquareSprite.RemoveData();
                     removeData.StartRow = r;
@@ -314,6 +327,7 @@ public class PlayerBase
                     removeData.Count = typeCount;
                     removeData.Dir = SquareSprite.RemoveDir.Horizontal;
                     removingData.Add(removeData);
+                    removeDataList.Add(removeData);
                     MarkWillRemove(removeData);
                     Remove(removeData);
                     //Debug.LogFormat("第{0}行，第{1}列,重复数量{2}",r,c,typeCount);
@@ -332,7 +346,7 @@ public class PlayerBase
             int typeCount = 0;
             for (int r = 0; r < raw - 1; r++)
             {
-                if (SquareMap[r, c] == null)
+                if (SquareMap[r, c] == null || !SquareMap[r, c].CanVerticalRemove())
                 {
                     continue;
                 }
@@ -345,7 +359,8 @@ public class PlayerBase
                 int i = r + 1;
                 for (i = r + 1; i < raw; i++)
                 {
-                    if (SquareMap[i, c] != null && SquareMap[i, c].Type == firstType && SquareMap[i, c].CanRemove())
+                    SquareSprite checkingSuqare = SquareMap[i, c];
+                    if (checkingSuqare != null && checkingSuqare.Type == firstType && checkingSuqare.CanVerticalRemove())
                     {
                         typeCount++;
                     }
@@ -359,6 +374,7 @@ public class PlayerBase
                             removeData.Count = typeCount;
                             removeData.Dir = SquareSprite.RemoveDir.Vertical;
                             removingData.Add(removeData);
+                            removeDataList.Add(removeData);
                             MarkWillRemove(removeData);
                             Remove(removeData);
                         }
@@ -367,7 +383,8 @@ public class PlayerBase
                     }
                 }
 
-                if (typeCount >= 3 && i == raw && SquareMap[i - 1, c] != null && SquareMap[i - 1, c].CanRemove())
+                SquareSprite lastSquare = SquareMap[i - 1, c];
+                if (typeCount >= 3 && i == raw && lastSquare != null && lastSquare.CanVerticalRemove())
                 {
                     SquareSprite.RemoveData removeData = new SquareSprite.RemoveData();
                     removeData.StartRow = r;
@@ -375,6 +392,7 @@ public class PlayerBase
                     removeData.Count = typeCount;
                     removeData.Dir = SquareSprite.RemoveDir.Vertical;
                     removingData.Add(removeData);
+                    removeDataList.Add(removeData);
                     MarkWillRemove(removeData);
                     Remove(removeData);
                     // Debug.LogFormat("第{0}行，第{1}列,重复数量{2}",r,c,typeCount);
@@ -384,20 +402,48 @@ public class PlayerBase
         }
     }
 
+    private int chainCount = 0;
+
     private void MarkWillRemove(SquareSprite.RemoveData removeData)
     {
+        bool chain = false;
         for (int i = 0; i < removeData.Count; i++)
         {
             if (removeData.Dir == SquareSprite.RemoveDir.Horizontal)
             {
                 SquareSprite squareNeedRemove = SquareMap[removeData.StartRow, removeData.StartColumn + i];
+                squareNeedRemove.HorizontalRemoved = true;
                 squareNeedRemove.MarkWillRemove();
+                if (squareNeedRemove.Chain)
+                {
+                    chain = true;
+                }
+                if (!squareNeedRemove.VerticalRemoved)
+                {
+                    removeList.Add(squareNeedRemove);
+                }
             }
             else
             {
+               
                 SquareSprite squareNeedRemove = SquareMap[removeData.StartRow + i, removeData.StartColumn];
+                squareNeedRemove.VerticalRemoved =  true;
                 squareNeedRemove.MarkWillRemove();
+                if (squareNeedRemove.Chain)
+                {
+                    chain = true;
+                }
+                if (!squareNeedRemove.HorizontalRemoved)
+                {
+                    removeList.Add(squareNeedRemove);
+                }
             }
+        }
+
+        if (chain)
+        {
+            chainCount++;
+            Debug.Log(chainCount);
         }
     }
 
@@ -420,8 +466,8 @@ public class PlayerBase
             else
             {
                 squareNeedRemove = SquareMap[removeData.StartRow + i, removeData.StartColumn];
-               
             }
+
             if (squareNeedRemove != null)
             {
                 squareNeedRemove.ShowRemoveEffect();
@@ -435,12 +481,19 @@ public class PlayerBase
         {
             if (removeData.Dir == SquareSprite.RemoveDir.Horizontal)
             {
-                SquareMap[removeData.StartRow, removeData.StartColumn + i].Remove();
+                if (SquareMap[removeData.StartRow, removeData.StartColumn + i] != null)
+                {
+                    SquareMap[removeData.StartRow, removeData.StartColumn + i].Remove();
+                }
+               
                 SquareMap[removeData.StartRow, removeData.StartColumn + i] = null;
             }
             else
             {
-                SquareMap[removeData.StartRow + i, removeData.StartColumn].Remove();
+                if (SquareMap[removeData.StartRow + i, removeData.StartColumn] != null)
+                {
+                    SquareMap[removeData.StartRow + i, removeData.StartColumn].Remove();
+                }
                 SquareMap[removeData.StartRow + i, removeData.StartColumn] = null;
             }
         }
@@ -521,7 +574,7 @@ public class PlayerBase
             {
                 if (SquareMap[r, c] != null)
                 {
-                    SquareMap[r,c].UpdateState();
+                    SquareMap[r, c].UpdateState();
                 }
             }
         }
@@ -540,43 +593,7 @@ public class PlayerBase
     }
 
     #endregion
-
 }
 
-public class NormalPlayer : PlayerBase
-{
-
-    public NormalPlayer()
-    {
-        Name = "LocalPlayer";
-        isRobot = false;
-    }
-}
-
-
-public class RobotPlayer : NormalPlayer
-{
-    public RobotPlayer()
-    {
-        isRobot = true;
-        Name = "RobotPlayer";
-    }
-}
-
-public class PVPPlayer : PlayerBase
-{
-    public bool IsLocal
-    {
-        get { return isLocal; }
-    }
-
-    protected bool isLocal = false;
-
-    public PVPPlayer(bool isLocal)
-    {
-        this.isLocal = isLocal;
-        this.isRobot = false;
-    }
-}
 
 
