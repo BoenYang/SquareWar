@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PVEMode : GameModeBase
@@ -13,10 +12,12 @@ public class PVEMode : GameModeBase
     {
         NormalPlayer player = new NormalPlayer();
         RobotPlayer robotPlayer = new RobotPlayer();
-        List<PlayerBase> players = new List<PlayerBase>();
+        player.SetMapPos(new Vector3(0.68f,0,0));
         robotPlayer.SetMapPos(new Vector3(10,0,0));
         players.Add(player);
         players.Add(robotPlayer);
+        DemoUI.Ins.Player1Score.text = player.Name + "：0";
+        DemoUI.Ins.Player2Score.text = robotPlayer.Name + "：0";
         MapMng.Instance.SetPlayer(players);
         MapMng.Instance.InitMap(Mode);
     }

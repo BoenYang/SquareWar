@@ -245,7 +245,7 @@ public class SquareSprite : MonoBehaviour
         Vector3 targetPos = transform.localPosition - new Vector3(0, GameSetting.SquareWidth, 0);
         player.SquareMap[Row + 1, Column] = this;
         player.SquareMap[Row, Column] = null;
-        transform.DOLocalMove(targetPos, 0.1f).SetRelative(false).OnComplete(() =>
+        transform.DOLocalMove(targetPos, 0.05f).SetRelative(false).SetEase(Ease.Linear).OnComplete(() =>
         {
             Row = Row + 1;
             isAnimating = false;

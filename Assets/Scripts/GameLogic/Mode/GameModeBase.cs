@@ -20,7 +20,7 @@ public enum GameResult
 
 public abstract class GameModeBase
 {
-    private List<PlayerBase> players = new List<PlayerBase>(); 
+    protected List<PlayerBase> players = new List<PlayerBase>(); 
 
     public abstract GameMode Mode { get; }
 
@@ -45,4 +45,5 @@ public abstract class GameModeBase
         }
         return (GameModeBase)Activator.CreateInstance(modeType);
     }
+
 }

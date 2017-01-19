@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerBase
+public class PlayerBase : MonoBehaviour
 {
     public string Name = "";
 
@@ -35,7 +35,6 @@ public class PlayerBase
     private float moveIntervalTimer;
 
     private bool gameOver = false;
-
 
     public void InitMap(MapMng mapMng, int[,] map)
     {
@@ -79,6 +78,7 @@ public class PlayerBase
                 }
             }
         }
+        OnChain(chainCount);
     }
 
     public void SetMapPos(Vector3 pos)
@@ -86,8 +86,7 @@ public class PlayerBase
         this.pos = pos;
     }
 
-
-    public Vector3 GetPos(int r, int c)
+    private Vector3 GetPos(int r, int c)
     {
         return startPos + new Vector3(c * GameSetting.SquareWidth, -r * GameSetting.SquareWidth, 0);
     }
@@ -253,7 +252,21 @@ public class PlayerBase
 
     private List<SquareSprite> removeList = new List<SquareSprite>();
 
-    private List<SquareSprite.RemoveData> removeDataList = new List<SquareSprite.RemoveData>(); 
+    private int chainCount = 1;
+
+    private float chainTimer;
+
+    private float chainInterval;
+
+    protected virtual void OnGetScore(int addScore)
+    {
+
+    }
+
+    protected virtual void OnChain(int chainCount)
+    {
+
+    }
 
     private void CheckRemove()
     {
@@ -262,14 +275,36 @@ public class PlayerBase
         CheckHorizontalRemove();
         CheckVerticalRemove();
         CalculateScore();
+        UpdateChainTimer();
+    }
+
+    private void UpdateChainTimer()
+    {
+        if (chainCount > 1)
+        {
+            chainTimer += Time.deltaTime;
+            if (chainTimer > chainInterval)
+            {
+                chainCount = 1;
+                chainTimer = 0f;
+                OnChain(chainCount);
+            }
+        }
     }
 
     private void CalculateScore()
     {
         if (removeList.Count > 0)
         {
-  
+            int scoreGain = (removeList.Count - 1);
+            if (chainCount > 1)
+            {
+                scoreGain += 6*(chainCount - 1);
+            }
+            Score += scoreGain;
+            OnGetScore(scoreGain);
         }
+       
     }
 
     private void CheckHorizontalRemove()
@@ -309,8 +344,6 @@ public class PlayerBase
                             removeData.Count = typeCount;
                             removeData.Dir = SquareSprite.RemoveDir.Horizontal;
                             removingData.Add(removeData);
-                            removeDataList.Add(removeData);
-                            MarkWillRemove(removeData);
                             Remove(removeData);
                         }
                         // Debug.LogFormat("第{0}行，第{1}列,重复数量{2}",r,c,typeCount);
@@ -327,8 +360,6 @@ public class PlayerBase
                     removeData.Count = typeCount;
                     removeData.Dir = SquareSprite.RemoveDir.Horizontal;
                     removingData.Add(removeData);
-                    removeDataList.Add(removeData);
-                    MarkWillRemove(removeData);
                     Remove(removeData);
                     //Debug.LogFormat("第{0}行，第{1}列,重复数量{2}",r,c,typeCount);
                 }
@@ -374,8 +405,6 @@ public class PlayerBase
                             removeData.Count = typeCount;
                             removeData.Dir = SquareSprite.RemoveDir.Vertical;
                             removingData.Add(removeData);
-                            removeDataList.Add(removeData);
-                            MarkWillRemove(removeData);
                             Remove(removeData);
                         }
                         //Debug.LogFormat("第{0}列，第{1}行,重复数量{2}", c, r, typeCount);
@@ -392,8 +421,6 @@ public class PlayerBase
                     removeData.Count = typeCount;
                     removeData.Dir = SquareSprite.RemoveDir.Vertical;
                     removingData.Add(removeData);
-                    removeDataList.Add(removeData);
-                    MarkWillRemove(removeData);
                     Remove(removeData);
                     // Debug.LogFormat("第{0}行，第{1}列,重复数量{2}",r,c,typeCount);
                 }
@@ -401,8 +428,6 @@ public class PlayerBase
             //Debug.LogFormat("第{0}列，第{1}行,重复数量{2}", c, mapData.GetLength(0), 1);
         }
     }
-
-    private int chainCount = 0;
 
     private void MarkWillRemove(SquareSprite.RemoveData removeData)
     {
@@ -443,12 +468,15 @@ public class PlayerBase
         if (chain)
         {
             chainCount++;
-            Debug.Log(chainCount);
+            chainInterval = removeData.Count* GameSetting.SquareRemoveInterval;
+            chainTimer = 0f;
+            OnChain(chainCount);
         }
     }
 
     private void Remove(SquareSprite.RemoveData removeData)
     {
+        MarkWillRemove(removeData);
         mapMng.StartCoroutine(RemoveCorutine(removeData));
     }
 
@@ -475,7 +503,7 @@ public class PlayerBase
             yield return new WaitForSeconds(GameSetting.BaseMapMoveInterval);
         }
 
-        //协程完毕之后全部清除
+        //消除完毕之后全部清除
         removingData.Remove(removeData);
         for (int i = 0; i < removeData.Count; i++)
         {
@@ -505,46 +533,7 @@ public class PlayerBase
 
     private float moveDistance = 0;
 
-    private void CalculateDropCount()
-    {
-        for (int c = 0; c < column; c++)
-        {
-            for (int r = 0; r < raw; r++)
-            {
-                if (SquareMap[r, c] == null || SquareMap[r, c].IsAnimating)
-                {
-                    continue;
-                }
-
-                SquareMap[r, c].CaluateNextNullCount(SquareMap);
-                //Debug.LogFormat("{0}行,{1}列 下部空格数量为{2}",r,c,squareSpriteMap[r,c].NextNullCount);
-            }
-        }
-    }
-
-    private void DropSquare()
-    {
-        for (int c = 0; c < column; c++)
-        {
-            for (int r = raw - 1; r >= 0; r--)
-            {
-                SquareSprite movingSquare = SquareMap[r, c];
-                if (movingSquare != null && movingSquare.NextNullCount != 0 && !movingSquare.IsAnimating)
-                {
-                    Vector3 moveToPos = GetPos(r + movingSquare.NextNullCount + insertedRawCount, c);
-
-                    movingSquare.MoveToNextNullPos(moveToPos, 0.1f, (s) =>
-                    {
-                        SquareMap[s.Row - s.NextNullCount, s.Column] = null;
-                        SquareMap[s.Row, s.Column] = s;
-                    });
-                }
-            }
-        }
-    }
-
-
-    protected void MoveMap()
+    protected virtual void MoveMap()
     {
         if (removingData.Count != 0)
         {
@@ -566,7 +555,7 @@ public class PlayerBase
         }
     }
 
-    public void UpdateState()
+    protected virtual void UpdateState()
     {
         for (int r = 0; r < raw; r++)
         {
