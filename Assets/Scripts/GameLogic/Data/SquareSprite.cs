@@ -136,7 +136,7 @@ public class SquareSprite : MonoBehaviour
 
     private bool CanRemove()
     {
-        return !isAnimating && State != SquareState.Fall && State != SquareState.Swap  && State != SquareState.Hung ;
+        return !isAnimating && State != SquareState.Fall && State != SquareState.Swap  && State != SquareState.Hung && State != SquareState.Hide ;
     }
 
     public bool CanVerticalRemove()
@@ -151,7 +151,7 @@ public class SquareSprite : MonoBehaviour
 
     public bool CanSwap()
     {
-        return !isAnimating && State == SquareState.Static;
+        return !isAnimating && State == SquareState.Static && State != SquareState.Hide;
     }
 
     public void SetGray(bool gray)
@@ -245,6 +245,8 @@ public class SquareSprite : MonoBehaviour
                         }
                     }
                 }
+                break;
+            case SquareState.Hide:
                 break;
         }
     }

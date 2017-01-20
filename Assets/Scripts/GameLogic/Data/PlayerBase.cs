@@ -14,28 +14,31 @@ public class PlayerBase : MonoBehaviour
 
     protected bool isRobot = false;
 
-
     protected int raw;
 
     protected int column;
-
-    private MapMng mapMng;
-
-    private Vector3 startPos;
-
-    private List<SquareSprite[]> squareWillInsert = new List<SquareSprite[]>();
-
-    private List<RemoveData> removingData = new List<RemoveData>();
-
-    private Transform squareRoot;
-
-    private Vector3 pos = Vector3.zero;
 
     private int insertedRawCount = 0;
 
     private float moveIntervalTimer;
 
     private bool gameOver = false;
+
+    private MapMng mapMng;
+
+    private Vector3 startPos;
+
+    private Vector3 mapOffset = Vector3.zero;
+
+    private Transform squareRoot;
+
+    private List<SquareSprite[]> squareWillInsert = new List<SquareSprite[]>();
+
+    private List<RemoveData> removingData = new List<RemoveData>();
+
+    private List<BlockSprite> blocks = new List<BlockSprite>(); 
+
+
 
     public virtual void InitPlayerMap(MapMng mapMng, int[,] map)
     {
@@ -49,7 +52,7 @@ public class PlayerBase : MonoBehaviour
         GameObject player =  new GameObject();
         player.name = Name;
         player.transform.SetParent(mapMng.gameObject.transform);
-        player.transform.localPosition = this.pos;
+        player.transform.localPosition = this.mapOffset;
         player.transform.localScale = Vector3.one;
         player.gameObject.layer = mapMng.gameObject.layer;
 
@@ -84,7 +87,7 @@ public class PlayerBase : MonoBehaviour
 
     public void SetMapPos(Vector3 pos)
     {
-        this.pos = pos;
+        this.mapOffset = pos;
     }
 
     private Vector3 GetPos(int r, int c)
@@ -170,16 +173,48 @@ public class PlayerBase : MonoBehaviour
             insertRawSquare[i].transform.localPosition = pos;
             insertRawSquare[i].transform.localScale = Vector3.one * 0.9f;
             insertRawSquare[i].name = "Rect[" + 0 + "," + i + "]";
+            insertRawSquare[i].gameObject.layer = squareRoot.gameObject.layer;
             insertRawSquare[i].SetGray(true);
             insertRawSquare[i].SetPlayer(this);
-            insertRawSquare[i].gameObject.layer = squareRoot.gameObject.layer;
+     
         }
         squareWillInsert.Add(insertRawSquare);
     }
 
-    public void InsertRowAtTop()
+    public void InsertBlockAtTopLeft(int[,] data,int type)
     {
+        int insertRaw = 0;
+        int insertColumn = 0;
+        int dataColumnCount = data.GetLength(1);
+        Vector3 pos = GetPos(insertRaw + insertedRawCount, insertColumn)+ new Vector3( (dataColumnCount - 1) * GameSetting.SquareWidth/2f,0,0);
+        BlockSprite bs = BlockSprite.CreateBlockSprite(insertRaw, insertColumn, type, data);
+        bs.transform.SetParent(squareRoot);
+        bs.transform.localPosition = pos;
+        bs.transform.localScale = Vector3.one * 0.9f;
+        bs.name = "Block[" + insertRaw + "," + insertColumn + "]";
+        bs.gameObject.layer = squareRoot.gameObject.layer;
 
+        bs.SetPlayer(this);
+        bs.CreateHideSquareSprite();
+        blocks.Add(bs);
+    }
+
+    public void InsertBlockAtTopRight(int[,] data,int type)
+    {
+        int insertRaw = 0;
+        int insertColumn = SquareMap.GetLength(1) - data.Length;
+        int dataColumnCount = data.GetLength(1);
+        Vector3 pos = GetPos(insertRaw  + insertedRawCount, insertColumn)+ new Vector3((dataColumnCount - 1) * GameSetting.SquareWidth / 2f, 0, 0);
+        BlockSprite bs = BlockSprite.CreateBlockSprite(insertRaw, insertColumn, type, data);
+        bs.transform.SetParent(squareRoot);
+        bs.transform.localPosition = pos;
+        bs.transform.localScale = Vector3.one * 0.9f;
+        bs.name = "Block[" + insertRaw + "," + insertColumn + "]";
+        bs.gameObject.layer = squareRoot.gameObject.layer;
+
+        bs.SetPlayer(this);
+
+        blocks.Add(bs);
     }
 
     #endregion
@@ -558,6 +593,11 @@ public class PlayerBase : MonoBehaviour
 
     protected virtual void UpdateState()
     {
+        for (int i = 0; i < blocks.Count; i++)
+        {
+            blocks[i].UpdateState();
+        }
+
         for (int r = 0; r < raw; r++)
         {
             for (int c = 0; c < column; c++)
@@ -568,6 +608,7 @@ public class PlayerBase : MonoBehaviour
                 }
             }
         }
+
     }
 
     public virtual void PlayerUpdate()

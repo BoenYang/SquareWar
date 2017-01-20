@@ -6,6 +6,7 @@ public enum SquareState
     Fall = 3,
     Hung = 4,
     Clear = 5,
+    Hide = 6,
 }
 
 public enum MoveDir
