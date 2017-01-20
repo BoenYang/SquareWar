@@ -3,40 +3,6 @@ using UnityEngine;
 
 public class SquareSprite : MonoBehaviour
 {
-    public enum SquareState
-    {
-        Static =    1,
-        Swap   =    2,
-        Fall   =    3,
-        Hung   =    4,
-        Clear  =    5,
-    }
-
-    public enum MoveDir
-    {
-        Left = 1,
-        Right = 2,
-    }
-
-    public enum RemoveDir
-    {
-        Vertical = 1,
-        Horizontal = 2,
-    }
-
-    public class RemoveData
-    {
-        public int StartRow;
-        public int StartColumn;
-        public int Count;
-        public RemoveDir Dir;
-
-        public override string ToString()
-        {
-            return string.Format("第{0}行,第{1}列，消除数量{2}", StartRow, StartColumn, Count);
-        }
-    }
-
     public delegate void MoveEndCallBack();
 
     public delegate void MoveNextNullCallBack(SquareSprite square);
@@ -51,17 +17,15 @@ public class SquareSprite : MonoBehaviour
 
     public bool Chain;
 
-    public int NextNullCount
-    {
-        get { return nextNullCount; }
-    }
+    public bool HorizontalRemoved = false;
+
+    public bool VerticalRemoved = false;
+
 
     private bool IsBottom()
     {
         return Row == (player.SquareMap.GetLength(0) - 1);
     }
-
-    private int nextNullCount;
 
     public bool IsAnimating
     {
@@ -81,10 +45,6 @@ public class SquareSprite : MonoBehaviour
     private Color grayColor = new Color(0.3f,0.3f,0.3f,1.0f);
 
     private PlayerBase player;
-
-    public bool HorizontalRemoved = false;
-
-    public bool VerticalRemoved = false;
 
     public static SquareSprite CreateSquare(int type, int r, int c)
     {
@@ -157,21 +117,6 @@ public class SquareSprite : MonoBehaviour
         });
     }
 
-    public void MoveToNextNullPos(Vector3 pos,float time, MoveNextNullCallBack callBack)
-    {
-        Row = Row + NextNullCount;
-        isAnimating = true;
-        transform.DOLocalMove(pos, time).SetRelative(false).OnComplete(() =>
-        {
-            isAnimating = false;
-            if (callBack != null)
-            {
-                callBack(this);
-                ResetNextNullCount();
-            }
-        });
-    }
-
     public void MarkWillRemove()
     {
         State = SquareState.Clear;
@@ -187,24 +132,6 @@ public class SquareSprite : MonoBehaviour
     {
         gameObject.SetActive(false);
         isAnimating = true;
-    }
-
-    public void ResetNextNullCount()
-    {
-        nextNullCount = 0;
-    }
-
-    public void CaluateNextNullCount(SquareSprite[,] mapData)
-    {
-        int nullCount = 0;
-        for (int i = Row + 1; i < mapData.GetLength(0); i++)
-        {
-            if (mapData[i, Column] == null)
-            {
-                nullCount++;
-            }
-        }
-        nextNullCount = nullCount;
     }
 
     private bool CanRemove()
@@ -251,10 +178,6 @@ public class SquareSprite : MonoBehaviour
             isAnimating = false;
         });
     }
-
-    private float clearTime;
-
-    private float clearTimer;
 
     public void UpdateState()
     {
@@ -325,4 +248,5 @@ public class SquareSprite : MonoBehaviour
                 break;
         }
     }
+
 }
