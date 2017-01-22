@@ -21,6 +21,9 @@ public class SquareSprite : MonoBehaviour
 
     public bool VerticalRemoved = false;
 
+    public BlockSprite Block;
+
+    public SpriteRenderer Renderer;
 
     private bool IsBottom()
     {
@@ -40,7 +43,7 @@ public class SquareSprite : MonoBehaviour
 
     private Vector2 mouseUpPos;
 
-    private SpriteRenderer renderer;
+
 
     private Color grayColor = new Color(0.3f,0.3f,0.3f,1.0f);
 
@@ -65,7 +68,7 @@ public class SquareSprite : MonoBehaviour
         ss.Column = c;
         ss.Row = r;
         ss.Type = type;
-        ss.renderer = sr;
+        ss.Renderer = sr;
         ss.State = SquareState.Static;
 
         collider.size = new Vector2(0.7f, 0.7f);
@@ -158,23 +161,32 @@ public class SquareSprite : MonoBehaviour
     {
         if (gray)
         {
-            renderer.color = renderer.color*grayColor;
+            Renderer.color = Renderer.color*grayColor;
         }
         else
         {
-            renderer.color = Color.white;
+            Renderer.color = Color.white;
         }
     }
 
     public void Fall()
     {
         isAnimating = true;
-        Vector3 targetPos = transform.localPosition - new Vector3(0, GameSetting.SquareWidth, 0);
         player.SquareMap[Row + 1, Column] = this;
         player.SquareMap[Row, Column] = null;
+        Vector3 targetPos = transform.localPosition - new Vector3(0, GameSetting.SquareWidth, 0);
         transform.DOLocalMove(targetPos, 0.05f).SetRelative(false).SetEase(Ease.Linear).OnComplete(() =>
         {
             Row = Row + 1;
+            isAnimating = false;
+        });
+    }
+
+    public void Hung()
+    {
+        isAnimating = true;
+        transform.DOScale(Vector3.one*0.9f, 0.01f).OnComplete(() =>
+        {
             isAnimating = false;
         });
     }
@@ -201,6 +213,7 @@ public class SquareSprite : MonoBehaviour
                     if (under == null)
                     {
                         State = SquareState.Hung;
+                        Hung();
                     }
                     else if (under.State == SquareState.Hung)
                     {

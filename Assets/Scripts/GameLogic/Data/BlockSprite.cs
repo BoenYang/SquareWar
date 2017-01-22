@@ -1,4 +1,5 @@
-﻿using DG.Tweening;
+﻿using System.Collections;
+using DG.Tweening;
 using UnityEngine;
 
 public class BlockSprite : MonoBehaviour
@@ -13,7 +14,13 @@ public class BlockSprite : MonoBehaviour
 
     public int[,] SquireType;
 
+    public SquareSprite[,] squares; 
+
     public SquareState State;
+
+    public bool IsRemovingLine;
+
+    public bool IsAnimating{ get { return isAnimating; } }
 
     private bool isAnimating = false;
 
@@ -44,10 +51,12 @@ public class BlockSprite : MonoBehaviour
 
     public void CreateHideSquareSprite()
     {
+        squares = new SquareSprite[SquireType.GetLength(0),SquireType.GetLength(1)];
+
         float startX = -SquireType.GetLength(1)*GameSetting.SquareWidth/2f + GameSetting.SquareWidth/2f;
-        for (int r = Raw; r < Raw + SquireType.GetLength(0); r++)
+        for (int r = 0; r <SquireType.GetLength(0); r++)
         {
-            for (int c = Column; c < Column + SquireType.GetLength(1); c++)
+            for (int c = 0; c < SquireType.GetLength(1); c++)
             {
                 SquareSprite ss = SquareSprite.CreateSquare(SquireType[r,c],r,c);
                 ss.Row = r;
@@ -59,7 +68,12 @@ public class BlockSprite : MonoBehaviour
                 ss.gameObject.layer = gameObject.layer;
                 ss.State = SquareState.Hide;
                 ss.gameObject.SetActive(false);
-                player.SquareMap[r, c] = ss;
+                ss.Block = this;
+
+                player.SquareMap[Raw -  r, Column + c] = ss;
+                squares[r, c] = ss;
+
+                ss.SetPlayer(player);
             }
         }
     }
@@ -81,7 +95,7 @@ public class BlockSprite : MonoBehaviour
         for (int c = Column; c < Column + SquireType.GetLength(1); c++)
         {
             SquareSprite downSquare = player.SquareMap[downRaw, c];
-            if (downSquare != null && (downSquare.State == SquareState.Static || downSquare.State == SquareState.Hide))
+            if (downSquare != null)
             {
                 isSupport = true;
                 break;
@@ -91,16 +105,72 @@ public class BlockSprite : MonoBehaviour
         return isSupport;
     }
 
-    public void RemoveALine()
+    public void RemoveLine()
     {
+        StartCoroutine(RemoveLineCorotine());
+    }
 
+    private IEnumerator RemoveLineCorotine()
+    {
+        isAnimating = true;
+
+        int lastRaw = SquireType.GetLength(0) - 1;
+        Color col = Color.white;
+        col.a = 0.5f;
+        Renderer.enabled = false;
+
+
+        for (int c = 0; c < SquireType.GetLength(1); c++)
+        {
+            squares[lastRaw,c].gameObject.SetActive(true);
+            squares[lastRaw, c].Renderer.color = col;
+            squares[lastRaw,c].transform.SetParent(player.SquareRoot);
+            yield return new WaitForSeconds(1f);
+        }
+        
+        
+        for (int c = 0; c < SquireType.GetLength(1); c++)
+        {
+            squares[lastRaw, c].State = SquareState.Static;
+            squares[lastRaw, c].Renderer.color = Color.white;
+        }
+
+
+        if (SquireType.GetLength(0) - 1 > 0)
+        {
+            int[,] tempSquareType = new int[SquireType.GetLength(0) - 1, SquireType.GetLength(1)];
+            for (int r = 0; r < tempSquareType.GetLength(0); r++)
+            {
+                for (int c = 0; c < tempSquareType.GetLength(1); c++)
+                {
+                    tempSquareType[r, c] = SquireType[r, c];
+                }
+            }
+            SquireType = tempSquareType;
+
+            SquareSprite[,] tempSquares = new SquareSprite[SquireType.GetLength(0) - 1, SquireType.GetLength(1)];
+
+            for (int r = 0; r < tempSquares.GetLength(0); r++)
+            {
+                for (int c = 0; c < tempSquares.GetLength(1); c++)
+                {
+                    tempSquares[r, c] = squares[r, c];
+                }
+            }
+            squares = tempSquares;
+        }
+        else
+        {
+            player.RemoveBlock(this);
+            Destroy(gameObject);
+        }
     }
 
     public void Fall()
     {
         isAnimating = true;
         Vector3 targetPos = transform.localPosition - new Vector3(0, GameSetting.SquareWidth, 0);
-        transform.DOLocalMove(targetPos, 0.05f).SetRelative(false).SetEase(Ease.Linear).OnComplete(() =>
+        transform.DOLocalMove(targetPos, 0.02f).SetRelative(false).SetEase(Ease.Linear).OnComplete(() =>
         {
             for (int r = Raw; r > Raw - SquireType.GetLength(0); r--)
             {
@@ -119,6 +189,8 @@ public class BlockSprite : MonoBehaviour
 
     public void UpdateState()
     {
+        Raw = squares[0,0].Row;
+
         if (isAnimating)
         {
             return;
@@ -131,7 +203,7 @@ public class BlockSprite : MonoBehaviour
                 {
                     State = SquareState.Hung;
                     isAnimating = true;
-                    transform.DOScale(Vector3.one, 0.1f).OnComplete(() =>
+                    transform.DOScale(Vector3.one, 0.05f).OnComplete(() =>
                     {
                         isAnimating = false;
                     });

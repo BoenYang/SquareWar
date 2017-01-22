@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerBase : MonoBehaviour
+public class PlayerBase
 {
     public string Name = "";
 
@@ -11,6 +11,8 @@ public class PlayerBase : MonoBehaviour
     public SquareSprite[,] SquareMap = null;
 
     public bool IsRobot { get { return isRobot; } }
+
+    public Transform SquareRoot;
 
     protected bool isRobot = false;
 
@@ -30,14 +32,13 @@ public class PlayerBase : MonoBehaviour
 
     private Vector3 mapOffset = Vector3.zero;
 
-    private Transform squareRoot;
+
 
     private List<SquareSprite[]> squareWillInsert = new List<SquareSprite[]>();
 
     private List<RemoveData> removingData = new List<RemoveData>();
 
     private List<BlockSprite> blocks = new List<BlockSprite>(); 
-
 
 
     public virtual void InitPlayerMap(MapMng mapMng, int[,] map)
@@ -57,7 +58,7 @@ public class PlayerBase : MonoBehaviour
         player.gameObject.layer = mapMng.gameObject.layer;
 
         startPos = new Vector3(-column*GameSetting.SquareWidth/2f + GameSetting.SquareWidth/2, raw*GameSetting.SquareWidth/2 - GameSetting.SquareWidth/2, 0);
-        squareRoot = player.transform;
+        SquareRoot = player.transform;
         insertedRawCount = 0;
 
         for (int r = 0; r < raw; r++)
@@ -68,13 +69,13 @@ public class PlayerBase : MonoBehaviour
                 {
                     Vector3 pos = GetPos(r, c);
                     SquareSprite ss = SquareSprite.CreateSquare(map[r, c], r, c);
-                    ss.transform.SetParent(squareRoot);
+                    ss.transform.SetParent(SquareRoot);
                     ss.transform.localPosition = pos;
                     ss.transform.localScale = Vector3.one * 0.9f;
                     ss.name = "Rect[" + r + "," + c + "]";
                     ss.SetPlayer(this);
                     SquareMap[r, c] = ss;
-                    SquareMap[r, c].gameObject.layer = squareRoot.gameObject.layer;
+                    SquareMap[r, c].gameObject.layer = SquareRoot.gameObject.layer;
                 }
                 else
                 {
@@ -169,11 +170,11 @@ public class PlayerBase : MonoBehaviour
         {
             Vector3 pos = GetPos(raw + squareWillInsert.Count + insertedRawCount, i);
             insertRawSquare[i] = SquareSprite.CreateSquare(insertRawData[i], -1, i);
-            insertRawSquare[i].transform.SetParent(squareRoot);
+            insertRawSquare[i].transform.SetParent(SquareRoot);
             insertRawSquare[i].transform.localPosition = pos;
             insertRawSquare[i].transform.localScale = Vector3.one * 0.9f;
             insertRawSquare[i].name = "Rect[" + 0 + "," + i + "]";
-            insertRawSquare[i].gameObject.layer = squareRoot.gameObject.layer;
+            insertRawSquare[i].gameObject.layer = SquareRoot.gameObject.layer;
             insertRawSquare[i].SetGray(true);
             insertRawSquare[i].SetPlayer(this);
      
@@ -188,11 +189,11 @@ public class PlayerBase : MonoBehaviour
         int dataColumnCount = data.GetLength(1);
         Vector3 pos = GetPos(insertRaw + insertedRawCount, insertColumn)+ new Vector3( (dataColumnCount - 1) * GameSetting.SquareWidth/2f,0,0);
         BlockSprite bs = BlockSprite.CreateBlockSprite(insertRaw, insertColumn, type, data);
-        bs.transform.SetParent(squareRoot);
+        bs.transform.SetParent(SquareRoot);
         bs.transform.localPosition = pos;
         bs.transform.localScale = Vector3.one * 0.9f;
         bs.name = "Block[" + insertRaw + "," + insertColumn + "]";
-        bs.gameObject.layer = squareRoot.gameObject.layer;
+        bs.gameObject.layer = SquareRoot.gameObject.layer;
 
         bs.SetPlayer(this);
         bs.CreateHideSquareSprite();
@@ -206,15 +207,20 @@ public class PlayerBase : MonoBehaviour
         int dataColumnCount = data.GetLength(1);
         Vector3 pos = GetPos(insertRaw  + insertedRawCount, insertColumn)+ new Vector3((dataColumnCount - 1) * GameSetting.SquareWidth / 2f, 0, 0);
         BlockSprite bs = BlockSprite.CreateBlockSprite(insertRaw, insertColumn, type, data);
-        bs.transform.SetParent(squareRoot);
+        bs.transform.SetParent(SquareRoot);
         bs.transform.localPosition = pos;
         bs.transform.localScale = Vector3.one * 0.9f;
         bs.name = "Block[" + insertRaw + "," + insertColumn + "]";
-        bs.gameObject.layer = squareRoot.gameObject.layer;
+        bs.gameObject.layer = SquareRoot.gameObject.layer;
 
         bs.SetPlayer(this);
-
+        bs.CreateHideSquareSprite();
         blocks.Add(bs);
+    }
+
+    public void RemoveBlock(BlockSprite block)
+    {
+        blocks.Remove(block);
     }
 
     #endregion
@@ -263,10 +269,12 @@ public class PlayerBase : MonoBehaviour
             s1.Column = c2;
             s1.Row = r2;
 
+            SquareSprite tempSquare = SquareMap[r1, c1];
+        
+
             Vector3 moveToPos = GetPos(r2 + insertedRawCount, c2);
-            s1.MoveToPos(moveToPos, 0.1f, () =>
+            s1.MoveToPos(moveToPos, GameSetting.SquareSwapTime, () =>
             {
-                SquareSprite tempSquare = SquareMap[r1, c1];
                 SquareMap[r1, c1] = SquareMap[r2, c2];
                 SquareMap[r2, c2] = tempSquare;
             });
@@ -278,7 +286,7 @@ public class PlayerBase : MonoBehaviour
             s2.Row = r1;
 
             Vector3 moveToPos = GetPos(r1 + insertedRawCount, c1);
-            s2.MoveToPos(moveToPos, 0.1f);
+            s2.MoveToPos(moveToPos, GameSetting.SquareSwapTime);
         }
     }
 
@@ -380,6 +388,7 @@ public class PlayerBase : MonoBehaviour
                             removeData.Count = typeCount;
                             removeData.Dir = RemoveDir.Horizontal;
                             removingData.Add(removeData);
+                            CheckBlockConnect(removeData);
                             Remove(removeData);
                         }
                         // Debug.LogFormat("第{0}行，第{1}列,重复数量{2}",r,c,typeCount);
@@ -396,6 +405,7 @@ public class PlayerBase : MonoBehaviour
                     removeData.Count = typeCount;
                     removeData.Dir = RemoveDir.Horizontal;
                     removingData.Add(removeData);
+                    CheckBlockConnect(removeData);
                     Remove(removeData);
                     //Debug.LogFormat("第{0}行，第{1}列,重复数量{2}",r,c,typeCount);
                 }
@@ -442,6 +452,7 @@ public class PlayerBase : MonoBehaviour
                             removeData.Dir = RemoveDir.Vertical;
                             removingData.Add(removeData);
                             Remove(removeData);
+                            CheckBlockConnect(removeData);
                         }
                         //Debug.LogFormat("第{0}列，第{1}行,重复数量{2}", c, r, typeCount);
                         break;
@@ -458,6 +469,7 @@ public class PlayerBase : MonoBehaviour
                     removeData.Dir = RemoveDir.Vertical;
                     removingData.Add(removeData);
                     Remove(removeData);
+                    CheckBlockConnect(removeData);
                     // Debug.LogFormat("第{0}行，第{1}列,重复数量{2}",r,c,typeCount);
                 }
             }
@@ -507,6 +519,64 @@ public class PlayerBase : MonoBehaviour
             chainInterval = removeData.Count* GameSetting.SquareRemoveInterval;
             chainTimer = 0f;
             OnChain(chainCount);
+        }
+    }
+
+    private void CheckBlockConnect(RemoveData removeData)
+    {
+        for (int i = 0; i < removeData.Count; i++)
+        {
+
+            SquareSprite left = null;
+            SquareSprite right = null;
+            SquareSprite above = null;
+            SquareSprite under = null;
+            SquareSprite squareNeedRemove = null;
+            if (removeData.Dir == RemoveDir.Horizontal)
+            {
+                squareNeedRemove = SquareMap[removeData.StartRow, removeData.StartColumn + i];
+            }
+            else
+            {
+                squareNeedRemove = SquareMap[removeData.StartRow + i, removeData.StartColumn];
+            }
+
+            if (squareNeedRemove != null)
+            {
+                if (squareNeedRemove.Column > 0)
+                {
+                    left = SquareMap[squareNeedRemove.Row, squareNeedRemove.Column - 1];
+                }
+
+                if (squareNeedRemove.Column < column - 1)
+                {
+                    right = SquareMap[squareNeedRemove.Row, squareNeedRemove.Column + 1];
+                }
+
+                if (squareNeedRemove.Row > 0)
+                {
+                    above = SquareMap[squareNeedRemove.Row - 1, squareNeedRemove.Column];
+                }
+
+                if (squareNeedRemove.Row < raw - 1)
+                {
+                    under = SquareMap[squareNeedRemove.Row + 1, squareNeedRemove.Column];
+                }
+                
+                RemoveBlock(left);
+                RemoveBlock(right);
+                RemoveBlock(above);
+                RemoveBlock(under);
+            }
+        }
+    }
+
+    private void RemoveBlock(SquareSprite squareInBlock)
+    {
+        if (squareInBlock != null && squareInBlock.State == SquareState.Hide && squareInBlock.Block != null &&
+            !squareInBlock.Block.IsAnimating)
+        {
+            squareInBlock.Block.RemoveLine();
         }
     }
 
@@ -581,8 +651,8 @@ public class PlayerBase : MonoBehaviour
         {
             moveIntervalTimer = 0;
             moveDistance += GameSetting.BaseMapMoveSpeed;
-            Vector3 curPos = squareRoot.localPosition;
-            squareRoot.localPosition = curPos + new Vector3(0, GameSetting.BaseMapMoveSpeed, 0);
+            Vector3 curPos = SquareRoot.localPosition;
+            SquareRoot.localPosition = curPos + new Vector3(0, GameSetting.BaseMapMoveSpeed, 0);
             if (Mathf.Abs(moveDistance - GameSetting.SquareWidth) <= 0.000001f)
             {
                 moveDistance = 0;
@@ -593,11 +663,6 @@ public class PlayerBase : MonoBehaviour
 
     protected virtual void UpdateState()
     {
-        for (int i = 0; i < blocks.Count; i++)
-        {
-            blocks[i].UpdateState();
-        }
-
         for (int r = 0; r < raw; r++)
         {
             for (int c = 0; c < column; c++)
@@ -608,7 +673,10 @@ public class PlayerBase : MonoBehaviour
                 }
             }
         }
-
+        for (int i = 0; i < blocks.Count; i++)
+        {
+            blocks[i].UpdateState();
+        }
     }
 
     public virtual void PlayerUpdate()
