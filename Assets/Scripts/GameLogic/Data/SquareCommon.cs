@@ -1,4 +1,5 @@
-﻿
+﻿using System.Collections.Generic;
+
 public enum SquareState
 {
     Static = 1,
@@ -27,6 +28,26 @@ public class RemoveData
     public int StartColumn;
     public int Count;
     public RemoveDir Dir;
+
+    public List<SquareSprite> RemoveList; 
+
+    public void ConvertToList(SquareSprite[,] map)
+    {
+        RemoveList = new List<SquareSprite>();
+        for (int i = 0; i < Count; i++)
+        {
+            SquareSprite squareNeedRemove = null;
+            if (Dir == RemoveDir.Horizontal)
+            {
+                squareNeedRemove = map[StartRow, StartColumn + i];
+            }
+            else
+            {
+                squareNeedRemove = map[StartRow + i, StartColumn];
+            }
+            RemoveList.Add(squareNeedRemove);
+        }
+    }
 
     public override string ToString()
     {

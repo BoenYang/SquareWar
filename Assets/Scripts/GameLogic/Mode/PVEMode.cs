@@ -18,6 +18,7 @@ public class PVEMode : GameModeBase
         players.Add(robotPlayer);
         DemoUI.Ins.Player1Score.text = player.Name + "：0";
         DemoUI.Ins.Player2Score.text = robotPlayer.Name + "：0";
+//        DemoUI.Ins.Image.gameObject.SetActive(true);
         MapMng.Instance.SetPlayer(players);
         MapMng.Instance.InitMap(Mode);
     }

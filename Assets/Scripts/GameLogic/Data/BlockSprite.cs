@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Runtime.InteropServices;
 using DG.Tweening;
 using UnityEngine;
 
@@ -54,15 +55,16 @@ public class BlockSprite : MonoBehaviour
         squares = new SquareSprite[SquireType.GetLength(0),SquireType.GetLength(1)];
 
         float startX = -SquireType.GetLength(1)*GameSetting.SquareWidth/2f + GameSetting.SquareWidth/2f;
-        for (int r = 0; r <SquireType.GetLength(0); r++)
+        float startY = SquireType.GetLength(0)*GameSetting.SquareWidth/2f - GameSetting.SquareWidth/2f;
+        for (int r = 0; r < SquireType.GetLength(0); r++)
         {
             for (int c = 0; c < SquireType.GetLength(1); c++)
             {
                 SquareSprite ss = SquareSprite.CreateSquare(SquireType[r,c],r,c);
-                ss.Row = r;
-                ss.Column = c;
+                ss.Row = Raw + r;
+                ss.Column = Column + c;
                 ss.transform.SetParent(transform);
-                ss.transform.localPosition =  new Vector3(startX + c * GameSetting.SquareWidth,0,0);
+                ss.transform.localPosition =  new Vector3(startX + c * GameSetting.SquareWidth, startY -  r * GameSetting.SquareWidth, 0);
                 ss.transform.localScale = Vector3.one * 0.9f;
                 ss.name = "Rect[" + r + "," + c + "]";
                 ss.gameObject.layer = gameObject.layer;
@@ -117,26 +119,52 @@ public class BlockSprite : MonoBehaviour
         int lastRaw = SquireType.GetLength(0) - 1;
         Color col = Color.white;
         col.a = 0.5f;
-        Renderer.enabled = false;
 
 
         for (int c = 0; c < SquireType.GetLength(1); c++)
         {
-            squares[lastRaw,c].gameObject.SetActive(true);
+            squares[lastRaw, c].gameObject.SetActive(true);
             squares[lastRaw, c].Renderer.color = col;
-            squares[lastRaw,c].transform.SetParent(player.SquareRoot);
-            yield return new WaitForSeconds(1f);
+            squares[lastRaw, c].transform.SetParent(player.SquareRoot);
+            squares[lastRaw, c].Block = null;
         }
-        
+
+        yield return 0;
+
+        int leftRawCount = SquireType.GetLength(0) - 1;
+        if (leftRawCount > 0)
+        {
+            string sprite = leftRawCount + "-" + SquireType.GetLength(1);
+            Renderer.sprite = Resources.Load<Sprite>(sprite);
+            transform.localPosition += new Vector3(0, GameSetting.SquareWidth/2, 0);
+
+
+            for (int r = 0; r < SquireType.GetLength(0) - 1; r++)
+            {
+                for (int c = 0; c < SquireType.GetLength(1); c++)
+                {
+                    squares[r, c].transform.localPosition = squares[r,c].transform.localPosition + new Vector3(0f,GameSetting.SquareWidth/2f,0f);
+                }
+            }
+        }
+        else
+        {
+            Renderer.enabled = false;
+        }
+
+        for (int c = 0; c < SquireType.GetLength(1); c++)
+        {
+            squares[lastRaw, c].Renderer.color = Color.white;
+            yield return new WaitForSeconds(0.5f);
+        }
         
         for (int c = 0; c < SquireType.GetLength(1); c++)
         {
             squares[lastRaw, c].State = SquareState.Static;
-            squares[lastRaw, c].Renderer.color = Color.white;
         }
 
 
-        if (SquireType.GetLength(0) - 1 > 0)
+        if (leftRawCount > 0)
         {
             int[,] tempSquareType = new int[SquireType.GetLength(0) - 1, SquireType.GetLength(1)];
             for (int r = 0; r < tempSquareType.GetLength(0); r++)
@@ -189,7 +217,7 @@ public class BlockSprite : MonoBehaviour
 
     public void UpdateState()
     {
-        Raw = squares[0,0].Row;
+        //Raw = squares[0,0].Row;
 
         if (isAnimating)
         {
@@ -220,7 +248,7 @@ public class BlockSprite : MonoBehaviour
                 else
                 {
                     State = SquareState.Static;
-                }
+                } 
                 break;
         }
     }

@@ -136,7 +136,7 @@ public class MapMng : MonoBehaviour
 
         if (GUILayout.Button("测试左边加板", GUILayout.Width(100)))
         {
-            Players[0].InsertBlockAtTopLeft(new int[,] { {1,2,3,4} },7);
+            Players[0].InsertBlockAtTopLeft(new int[,] { { 1, 2, 3, 4 }, { 4, 2, 3, 1 } },7);
         }
 
         if (GUILayout.Button("测试右边加板", GUILayout.Width(100)))

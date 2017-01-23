@@ -9,6 +9,8 @@ public class DemoUI : MonoBehaviour
 
     public Text Chain;
 
+    public RawImage Image;
+
     public static DemoUI Ins;
 
     void Awake()

@@ -32,8 +32,6 @@ public class PlayerBase
 
     private Vector3 mapOffset = Vector3.zero;
 
-
-
     private List<SquareSprite[]> squareWillInsert = new List<SquareSprite[]>();
 
     private List<RemoveData> removingData = new List<RemoveData>();
@@ -105,12 +103,6 @@ public class PlayerBase
 
     public void InsertRowAtIndex(int insertRowIndex,SquareSprite[] squareData)
     {
-        if (squareData == null || squareData.Length > SquareMap.GetLength(0))
-        {
-            Debug.LogError("数据格式不合法");
-            return;
-        }
-
 
         for (int r = 1; r <= insertRowIndex; r++)
         {
@@ -138,11 +130,17 @@ public class PlayerBase
 
     public void InsertRowAtBottom()
     {
+        Debug.Log("insert ============ " + Time.frameCount);
         if (squareWillInsert.Count == 0)
         {
             return;
         }
 
+        if (squareWillInsert[0].Length > SquareMap.GetLength(0))
+        {
+            Debug.LogError("数据格式不合法");
+            return;
+        }
 
         for (int c = 0; c < SquareMap.GetLength(1); c++)
         {
@@ -154,6 +152,20 @@ public class PlayerBase
         }
         insertedRawCount++;
         InsertRowAtIndex(raw - 1,squareWillInsert[0]);
+
+        for (int i = 0; i < blocks.Count; i++)
+        {
+            blocks[i].Raw--;
+        }
+
+        if (removingData.Count > 0)
+        {
+            for (int i = 0; i < removingData.Count; i++)
+            {
+                removingData[i].StartRow--;
+            }
+        }
+
         squareWillInsert.RemoveAt(0);
     }
 
@@ -184,10 +196,10 @@ public class PlayerBase
 
     public void InsertBlockAtTopLeft(int[,] data,int type)
     {
-        int insertRaw = 0;
+        int insertRaw = data.GetLength(0) - 1;
         int insertColumn = 0;
         int dataColumnCount = data.GetLength(1);
-        Vector3 pos = GetPos(insertRaw + insertedRawCount, insertColumn)+ new Vector3( (dataColumnCount - 1) * GameSetting.SquareWidth/2f,0,0);
+        Vector3 pos = GetPos(insertRaw + insertedRawCount, insertColumn) + new Vector3( (dataColumnCount - 1) * GameSetting.SquareWidth/2f, insertRaw * GameSetting.SquareWidth/2f,0);
         BlockSprite bs = BlockSprite.CreateBlockSprite(insertRaw, insertColumn, type, data);
         bs.transform.SetParent(SquareRoot);
         bs.transform.localPosition = pos;
@@ -202,10 +214,10 @@ public class PlayerBase
 
     public void InsertBlockAtTopRight(int[,] data,int type)
     {
-        int insertRaw = 0;
-        int insertColumn = SquareMap.GetLength(1) - data.Length;
+        int insertRaw = data.GetLength(0) - 1;
+        int insertColumn = SquareMap.GetLength(1) - data.GetLength(1);
         int dataColumnCount = data.GetLength(1);
-        Vector3 pos = GetPos(insertRaw  + insertedRawCount, insertColumn)+ new Vector3((dataColumnCount - 1) * GameSetting.SquareWidth / 2f, 0, 0);
+        Vector3 pos = GetPos(insertRaw  + insertedRawCount, insertColumn) + new Vector3((dataColumnCount - 1) * GameSetting.SquareWidth / 2f, insertRaw * GameSetting.SquareWidth / 2f, 0);
         BlockSprite bs = BlockSprite.CreateBlockSprite(insertRaw, insertColumn, type, data);
         bs.transform.SetParent(SquareRoot);
         bs.transform.localPosition = pos;
@@ -270,7 +282,6 @@ public class PlayerBase
             s1.Row = r2;
 
             SquareSprite tempSquare = SquareMap[r1, c1];
-        
 
             Vector3 moveToPos = GetPos(r2 + insertedRawCount, c2);
             s1.MoveToPos(moveToPos, GameSetting.SquareSwapTime, () =>
@@ -387,8 +398,7 @@ public class PlayerBase
                             removeData.StartColumn = c;
                             removeData.Count = typeCount;
                             removeData.Dir = RemoveDir.Horizontal;
-                            removingData.Add(removeData);
-                            CheckBlockConnect(removeData);
+                            RemoveConnectedBlock(removeData);
                             Remove(removeData);
                         }
                         // Debug.LogFormat("第{0}行，第{1}列,重复数量{2}",r,c,typeCount);
@@ -404,8 +414,7 @@ public class PlayerBase
                     removeData.StartColumn = c;
                     removeData.Count = typeCount;
                     removeData.Dir = RemoveDir.Horizontal;
-                    removingData.Add(removeData);
-                    CheckBlockConnect(removeData);
+                    RemoveConnectedBlock(removeData);
                     Remove(removeData);
                     //Debug.LogFormat("第{0}行，第{1}列,重复数量{2}",r,c,typeCount);
                 }
@@ -450,9 +459,8 @@ public class PlayerBase
                             removeData.StartColumn = c;
                             removeData.Count = typeCount;
                             removeData.Dir = RemoveDir.Vertical;
-                            removingData.Add(removeData);
                             Remove(removeData);
-                            CheckBlockConnect(removeData);
+                            RemoveConnectedBlock(removeData);
                         }
                         //Debug.LogFormat("第{0}列，第{1}行,重复数量{2}", c, r, typeCount);
                         break;
@@ -467,9 +475,8 @@ public class PlayerBase
                     removeData.StartColumn = c;
                     removeData.Count = typeCount;
                     removeData.Dir = RemoveDir.Vertical;
-                    removingData.Add(removeData);
                     Remove(removeData);
-                    CheckBlockConnect(removeData);
+                    RemoveConnectedBlock(removeData);
                     // Debug.LogFormat("第{0}行，第{1}列,重复数量{2}",r,c,typeCount);
                 }
             }
@@ -522,7 +529,7 @@ public class PlayerBase
         }
     }
 
-    private void CheckBlockConnect(RemoveData removeData)
+    private void RemoveConnectedBlock(RemoveData removeData)
     {
         for (int i = 0; i < removeData.Count; i++)
         {
@@ -582,26 +589,20 @@ public class PlayerBase
 
     private void Remove(RemoveData removeData)
     {
+        removeData.ConvertToList(SquareMap);
+        removingData.Add(removeData);
         MarkWillRemove(removeData);
         mapMng.StartCoroutine(RemoveCorutine(removeData));
     }
 
     private IEnumerator RemoveCorutine(RemoveData removeData)
     {
+        Debug.Log("remove ============ " + Time.frameCount);
         //在协程中一个一个移除
         yield return new WaitForSeconds(GameSetting.BaseMapMoveInterval);
-        for (int i = 0; i < removeData.Count; i++)
+        for (int i = 0; i < removeData.RemoveList.Count; i++)
         {
-            SquareSprite squareNeedRemove = null;
-            if (removeData.Dir == RemoveDir.Horizontal)
-            {
-                squareNeedRemove = SquareMap[removeData.StartRow, removeData.StartColumn + i];
-            }
-            else
-            {
-                squareNeedRemove = SquareMap[removeData.StartRow + i, removeData.StartColumn];
-            }
-
+            SquareSprite squareNeedRemove = removeData.RemoveList[i];
             if (squareNeedRemove != null)
             {
                 squareNeedRemove.ShowRemoveEffect();
@@ -609,28 +610,20 @@ public class PlayerBase
             yield return new WaitForSeconds(GameSetting.BaseMapMoveInterval);
         }
 
-        //消除完毕之后全部清除
-        removingData.Remove(removeData);
-        for (int i = 0; i < removeData.Count; i++)
+        for (int i = 0; i < removeData.RemoveList.Count; i++)
         {
-            if (removeData.Dir == RemoveDir.Horizontal)
+            SquareSprite squareNeedRemove = removeData.RemoveList[i];
+
+            if (squareNeedRemove != null)
             {
-                if (SquareMap[removeData.StartRow, removeData.StartColumn + i] != null)
-                {
-                    SquareMap[removeData.StartRow, removeData.StartColumn + i].Remove();
-                }
-               
-                SquareMap[removeData.StartRow, removeData.StartColumn + i] = null;
-            }
-            else
-            {
-                if (SquareMap[removeData.StartRow + i, removeData.StartColumn] != null)
-                {
-                    SquareMap[removeData.StartRow + i, removeData.StartColumn].Remove();
-                }
-                SquareMap[removeData.StartRow + i, removeData.StartColumn] = null;
+                SquareMap[squareNeedRemove.Row, squareNeedRemove.Column].Remove();
+                SquareMap[squareNeedRemove.Row, squareNeedRemove.Column] = null;
             }
         }
+
+        Debug.Log("remove end ============ " + Time.frameCount);
+        //消除完毕之后全部清除
+        removingData.Remove(removeData);
     }
 
     #endregion

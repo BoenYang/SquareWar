@@ -11,8 +11,9 @@ public class StandAloneMode : GameModeBase
     public override void Init()
     {
         NormalPlayer player = new NormalPlayer();
-        List<PlayerBase> players = new List<PlayerBase>();
+        players = new List<PlayerBase>();
         players.Add(player);
+        DemoUI.Ins.Image.gameObject.SetActive(false);
         MapMng.Instance.SetPlayer(players);
         MapMng.Instance.InitMap(Mode);
     }
