@@ -43,8 +43,6 @@ public class SquareSprite : MonoBehaviour
 
     private Vector2 mouseUpPos;
 
-
-
     private Color grayColor = new Color(0.3f,0.3f,0.3f,1.0f);
 
     private PlayerBase player;

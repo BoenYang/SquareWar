@@ -36,6 +36,13 @@ public class MapDataEditor : EditorWindow
         }
     }
 
+    [MenuItem("Tools/PrintLocalPosition")]
+    public static void PrintLocalPosition()
+    {
+        GameObject go = Selection.activeGameObject;
+        Debug.Log(go.transform.localPosition);
+    }
+
     void OnGUI()
     {
         if (Application.isPlaying)

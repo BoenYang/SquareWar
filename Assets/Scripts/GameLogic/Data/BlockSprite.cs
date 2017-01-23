@@ -61,7 +61,7 @@ public class BlockSprite : MonoBehaviour
             for (int c = 0; c < SquireType.GetLength(1); c++)
             {
                 SquareSprite ss = SquareSprite.CreateSquare(SquireType[r,c],r,c);
-                ss.Row = Raw + r;
+                ss.Row = Raw - SquireType.GetLength(0) + r + 1;
                 ss.Column = Column + c;
                 ss.transform.SetParent(transform);
                 ss.transform.localPosition =  new Vector3(startX + c * GameSetting.SquareWidth, startY -  r * GameSetting.SquareWidth, 0);
@@ -72,7 +72,7 @@ public class BlockSprite : MonoBehaviour
                 ss.gameObject.SetActive(false);
                 ss.Block = this;
 
-                player.SquareMap[Raw -  r, Column + c] = ss;
+                player.SquareMap[ss.Row, ss.Column] = ss;
                 squares[r, c] = ss;
 
                 ss.SetPlayer(player);
@@ -129,21 +129,20 @@ public class BlockSprite : MonoBehaviour
             squares[lastRaw, c].Block = null;
         }
 
-        yield return 0;
-
         int leftRawCount = SquireType.GetLength(0) - 1;
+
         if (leftRawCount > 0)
         {
             string sprite = leftRawCount + "-" + SquireType.GetLength(1);
             Renderer.sprite = Resources.Load<Sprite>(sprite);
-            transform.localPosition += new Vector3(0, GameSetting.SquareWidth/2, 0);
+            transform.localPosition += new Vector3(0, GameSetting.SquareWidth / 2, 0);
 
 
             for (int r = 0; r < SquireType.GetLength(0) - 1; r++)
             {
                 for (int c = 0; c < SquireType.GetLength(1); c++)
                 {
-                    squares[r, c].transform.localPosition = squares[r,c].transform.localPosition + new Vector3(0f,GameSetting.SquareWidth/2f,0f);
+                    squares[r, c].transform.localPosition = squares[r, c].transform.localPosition - new Vector3(0f, GameSetting.SquareWidth / 2f, 0f);
                 }
             }
         }
@@ -151,6 +150,8 @@ public class BlockSprite : MonoBehaviour
         {
             Renderer.enabled = false;
         }
+
+        yield return 0;
 
         for (int c = 0; c < SquireType.GetLength(1); c++)
         {
@@ -192,6 +193,8 @@ public class BlockSprite : MonoBehaviour
             player.RemoveBlock(this);
             Destroy(gameObject);
         }
+        Raw--;
+        isAnimating = false;
     }
 
     public void Fall()

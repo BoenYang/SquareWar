@@ -130,7 +130,6 @@ public class PlayerBase
 
     public void InsertRowAtBottom()
     {
-        Debug.Log("insert ============ " + Time.frameCount);
         if (squareWillInsert.Count == 0)
         {
             return;
@@ -156,14 +155,6 @@ public class PlayerBase
         for (int i = 0; i < blocks.Count; i++)
         {
             blocks[i].Raw--;
-        }
-
-        if (removingData.Count > 0)
-        {
-            for (int i = 0; i < removingData.Count; i++)
-            {
-                removingData[i].StartRow--;
-            }
         }
 
         squareWillInsert.RemoveAt(0);
@@ -281,13 +272,11 @@ public class PlayerBase
             s1.Column = c2;
             s1.Row = r2;
 
-            SquareSprite tempSquare = SquareMap[r1, c1];
-
-            Vector3 moveToPos = GetPos(r2 + insertedRawCount, c2);
+            Vector3 moveToPos =  GetPos(r2 + insertedRawCount, c2);
             s1.MoveToPos(moveToPos, GameSetting.SquareSwapTime, () =>
             {
-                SquareMap[r1, c1] = SquareMap[r2, c2];
-                SquareMap[r2, c2] = tempSquare;
+                SquareMap[r1, c1] = s2;
+                SquareMap[r2, c2] = s1;
             });
         }
 
@@ -597,7 +586,6 @@ public class PlayerBase
 
     private IEnumerator RemoveCorutine(RemoveData removeData)
     {
-        Debug.Log("remove ============ " + Time.frameCount);
         //在协程中一个一个移除
         yield return new WaitForSeconds(GameSetting.BaseMapMoveInterval);
         for (int i = 0; i < removeData.RemoveList.Count; i++)
@@ -621,7 +609,6 @@ public class PlayerBase
             }
         }
 
-        Debug.Log("remove end ============ " + Time.frameCount);
         //消除完毕之后全部清除
         removingData.Remove(removeData);
     }
@@ -676,7 +663,7 @@ public class PlayerBase
     {
         UpdateState();
         CheckRemove();
-        MoveMap();
+        //MoveMap();
     }
 
     public bool CheckGameOver()
