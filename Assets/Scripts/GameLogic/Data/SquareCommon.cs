@@ -12,8 +12,8 @@ public enum SquareState
 
 public enum MoveDir
 {
-    Left = 1,
-    Right = 2,
+    Left = -1,
+    Right = 1,
 }
 
 public enum RemoveDir

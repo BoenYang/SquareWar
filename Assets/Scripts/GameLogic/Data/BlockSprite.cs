@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Runtime.InteropServices;
 using DG.Tweening;
 using UnityEngine;
 
@@ -167,7 +166,7 @@ public class BlockSprite : MonoBehaviour
 
         if (leftRawCount > 0)
         {
-            int[,] tempSquareType = new int[SquireType.GetLength(0) - 1, SquireType.GetLength(1)];
+            int[,] tempSquareType = new int[leftRawCount, SquireType.GetLength(1)];
             for (int r = 0; r < tempSquareType.GetLength(0); r++)
             {
                 for (int c = 0; c < tempSquareType.GetLength(1); c++)
@@ -177,7 +176,7 @@ public class BlockSprite : MonoBehaviour
             }
             SquireType = tempSquareType;
 
-            SquareSprite[,] tempSquares = new SquareSprite[SquireType.GetLength(0) - 1, SquireType.GetLength(1)];
+            SquareSprite[,] tempSquares = new SquareSprite[leftRawCount, SquireType.GetLength(1)];
 
             for (int r = 0; r < tempSquares.GetLength(0); r++)
             {
@@ -201,7 +200,7 @@ public class BlockSprite : MonoBehaviour
     {
         isAnimating = true;
         Vector3 targetPos = transform.localPosition - new Vector3(0, GameSetting.SquareWidth, 0);
-        transform.DOLocalMove(targetPos, 0.02f).SetRelative(false).SetEase(Ease.Linear).OnComplete(() =>
+        transform.DOLocalMove(targetPos, GameSetting.SquareFallTime).SetRelative(false).SetEase(Ease.Linear).OnComplete(() =>
         {
             for (int r = Raw; r > Raw - SquireType.GetLength(0); r--)
             {
@@ -234,7 +233,7 @@ public class BlockSprite : MonoBehaviour
                 {
                     State = SquareState.Hung;
                     isAnimating = true;
-                    transform.DOScale(Vector3.one, 0.05f).OnComplete(() =>
+                    transform.DOScale(transform.localScale, GameSetting.SquareHungTime).OnComplete(() =>
                     {
                         isAnimating = false;
                     });

@@ -38,7 +38,6 @@ public class PlayerBase
 
     private List<BlockSprite> blocks = new List<BlockSprite>(); 
 
-
     public virtual void InitPlayerMap(MapMng mapMng, int[,] map)
     {
         this.mapMng = mapMng;
@@ -587,7 +586,7 @@ public class PlayerBase
     private IEnumerator RemoveCorutine(RemoveData removeData)
     {
         //在协程中一个一个移除
-        yield return new WaitForSeconds(GameSetting.BaseMapMoveInterval);
+        yield return new WaitForSeconds(GameSetting.SquareRemoveInterval);
         for (int i = 0; i < removeData.RemoveList.Count; i++)
         {
             SquareSprite squareNeedRemove = removeData.RemoveList[i];
@@ -595,7 +594,7 @@ public class PlayerBase
             {
                 squareNeedRemove.ShowRemoveEffect();
             }
-            yield return new WaitForSeconds(GameSetting.BaseMapMoveInterval);
+            yield return new WaitForSeconds(GameSetting.SquareRemoveInterval);
         }
 
         for (int i = 0; i < removeData.RemoveList.Count; i++)
@@ -627,7 +626,7 @@ public class PlayerBase
         }
 
         moveIntervalTimer += Time.deltaTime;
-        if (moveIntervalTimer >= GameSetting.SquareRemoveInterval)
+        if (moveIntervalTimer >= GameSetting.BaseMapMoveInterval)
         {
             moveIntervalTimer = 0;
             moveDistance += GameSetting.BaseMapMoveSpeed;
@@ -663,7 +662,7 @@ public class PlayerBase
     {
         UpdateState();
         CheckRemove();
-        //MoveMap();
+        MoveMap();
     }
 
     public bool CheckGameOver()

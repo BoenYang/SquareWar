@@ -1,4 +1,6 @@
-﻿using UnityEditor;
+﻿using System;
+using System.Reflection;
+using UnityEditor;
 using UnityEngine;
 
 public class MapDataEditor : EditorWindow
@@ -28,12 +30,24 @@ public class MapDataEditor : EditorWindow
     [MenuItem("Tools/Test")]
     public static void SetCameraToZero()
     {
-        if (SceneView.lastActiveSceneView != null)
-        {
-            Debug.Log(SceneView.lastActiveSceneView.camera.transform.position);
-            SceneView.lastActiveSceneView.camera.transform.position = Vector3.zero;
-            SceneView.lastActiveSceneView.Repaint();
-        }
+        //        if (SceneView.lastActiveSceneView != null)
+        //        {
+        //            SceneView.lastActiveSceneView.camera.transform.position = Vector3.zero;
+        //            SceneView.lastActiveSceneView.Repaint();
+        //        }
+
+        MonoScript ms = AssetDatabase.LoadAssetAtPath<MonoScript>("Assets/Scripts/GameLogic/Data/BlockSprite.cs");//如果路径分隔符是//将无法正确读取文件
+        Debug.Log(ms == null);
+
+        GameObject go = Selection.activeGameObject;
+   
+    }
+
+    private void AddScriptComponentUncheckedUndoable(GameObject go,MonoScript monoScript)
+    {
+        Type t = typeof(UnityEditorInternal.InternalEditorUtility);
+        MethodInfo methodInfo = t.GetMethod("AddScriptComponentUncheckedUndoable", BindingFlags.NonPublic | BindingFlags.Static);
+        methodInfo.Invoke(null, new object[] { go, monoScript });
     }
 
     [MenuItem("Tools/PrintLocalPosition")]
@@ -74,7 +88,7 @@ public class MapDataEditor : EditorWindow
 
         if (squareMap != null)
         {
-            Vector2 startPos = new Vector2(300, startY);
+            Vector2 startPos = new Vector2(100, startY);
 
             for (int r = 0; r < squareMap.GetLength(0); r++)
             {
@@ -94,7 +108,7 @@ public class MapDataEditor : EditorWindow
                 }
             }
 
-            startPos = new Vector2(500, startY);
+            startPos = new Vector2(300, startY);
 
             for (int r = 0; r < squareMap.GetLength(0); r++)
             {
@@ -115,7 +129,7 @@ public class MapDataEditor : EditorWindow
                 }
             }
 
-            startPos = new Vector2(700, startY);
+            startPos = new Vector2(500, startY);
 
             for (int r = 0; r < squareMap.GetLength(0); r++)
             {

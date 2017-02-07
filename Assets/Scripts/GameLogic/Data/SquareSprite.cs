@@ -173,7 +173,7 @@ public class SquareSprite : MonoBehaviour
         player.SquareMap[Row + 1, Column] = this;
         player.SquareMap[Row, Column] = null;
         Vector3 targetPos = transform.localPosition - new Vector3(0, GameSetting.SquareWidth, 0);
-        transform.DOLocalMove(targetPos, 0.05f).SetRelative(false).SetEase(Ease.Linear).OnComplete(() =>
+        transform.DOLocalMove(targetPos, GameSetting.SquareFallTime).SetRelative(false).SetEase(Ease.Linear).OnComplete(() =>
         {
             Row = Row + 1;
             isAnimating = false;
@@ -183,7 +183,7 @@ public class SquareSprite : MonoBehaviour
     public void Hung()
     {
         isAnimating = true;
-        transform.DOScale(Vector3.one*0.9f, 0.01f).OnComplete(() =>
+        transform.DOScale(transform.localScale, GameSetting.SquareHungTime).OnComplete(() =>
         {
             isAnimating = false;
         });
@@ -216,6 +216,8 @@ public class SquareSprite : MonoBehaviour
                     else if (under.State == SquareState.Hung)
                     {
                         Chain = under.Chain;
+                        State = SquareState.Hung;
+                        Hung();
                     }
                     else
                     {
