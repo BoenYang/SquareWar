@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class StandAloneMode : GameModeBase
 {
@@ -11,6 +12,7 @@ public class StandAloneMode : GameModeBase
     public override void Init()
     {
         NormalPlayer player = new NormalPlayer();
+        player.SetMapPos(new Vector3(1.09f, 0.7f, 0));
         players = new List<PlayerBase>();
         players.Add(player);
         DemoUI.Ins.Image.gameObject.SetActive(false);

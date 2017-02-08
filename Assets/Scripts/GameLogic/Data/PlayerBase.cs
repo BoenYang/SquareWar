@@ -50,7 +50,7 @@ public class PlayerBase
         GameObject player =  new GameObject();
         player.name = Name;
         player.transform.SetParent(mapMng.gameObject.transform);
-        player.transform.localPosition = this.mapOffset;
+        player.transform.localPosition = mapOffset;
         player.transform.localScale = Vector3.one;
         player.gameObject.layer = mapMng.gameObject.layer;
 
@@ -68,16 +68,29 @@ public class PlayerBase
                     SquareSprite ss = SquareSprite.CreateSquare(map[r, c], r, c);
                     ss.transform.SetParent(SquareRoot);
                     ss.transform.localPosition = pos;
-                    ss.transform.localScale = Vector3.one * 0.9f;
                     ss.name = "Rect[" + r + "," + c + "]";
                     ss.SetPlayer(this);
                     SquareMap[r, c] = ss;
                     SquareMap[r, c].gameObject.layer = SquareRoot.gameObject.layer;
+
+                  
                 }
                 else
                 {
                     SquareMap[r, c] = null;
                 }
+
+                Sprite bg = Resources.Load<Sprite>("fk" + (((c + r) % 2) + 1));
+
+                GameObject sprite = new GameObject("sprite");
+                SpriteRenderer sr = sprite.AddComponent<SpriteRenderer>();
+                sr.sprite = bg;
+                sr.sortingLayerName = "Game";
+                sr.sortingOrder = 1;
+                sprite.layer = SquareRoot.gameObject.layer;
+                sprite.transform.SetParent(SquareRoot);
+                sprite.transform.localPosition = GetPos(r, c);
+                sprite.transform.localScale = Vector3.one*0.8f;
             }
         }
         OnChain(chainCount);
@@ -174,12 +187,22 @@ public class PlayerBase
             insertRawSquare[i] = SquareSprite.CreateSquare(insertRawData[i], -1, i);
             insertRawSquare[i].transform.SetParent(SquareRoot);
             insertRawSquare[i].transform.localPosition = pos;
-            insertRawSquare[i].transform.localScale = Vector3.one * 0.9f;
             insertRawSquare[i].name = "Rect[" + 0 + "," + i + "]";
             insertRawSquare[i].gameObject.layer = SquareRoot.gameObject.layer;
             insertRawSquare[i].SetGray(true);
             insertRawSquare[i].SetPlayer(this);
-     
+
+            Sprite bg = Resources.Load<Sprite>("fk" + (((row + squareWillInsert.Count + insertedRawCount + i) % 2) + 1));
+            GameObject sprite = new GameObject("sprite");
+            SpriteRenderer sr = sprite.AddComponent<SpriteRenderer>();
+            sr.sprite = bg;
+            sr.sortingLayerName = "Game";
+            sr.sortingOrder = 1;
+            sprite.layer = SquareRoot.gameObject.layer;
+            sprite.transform.SetParent(SquareRoot);
+            sprite.transform.localPosition = GetPos(row + squareWillInsert.Count + insertedRawCount, i);
+            sprite.transform.localScale = Vector3.one * 0.8f;
+
         }
         squareWillInsert.Add(insertRawSquare);
     }
@@ -193,7 +216,6 @@ public class PlayerBase
         BlockSprite bs = BlockSprite.CreateBlockSprite(insertRaw, insertColumn, type, data);
         bs.transform.SetParent(SquareRoot);
         bs.transform.localPosition = pos;
-        bs.transform.localScale = Vector3.one * 0.9f;
         bs.name = "Block[" + insertRaw + "," + insertColumn + "]";
         bs.gameObject.layer = SquareRoot.gameObject.layer;
 
@@ -211,7 +233,6 @@ public class PlayerBase
         BlockSprite bs = BlockSprite.CreateBlockSprite(insertRaw, insertColumn, type, data);
         bs.transform.SetParent(SquareRoot);
         bs.transform.localPosition = pos;
-        bs.transform.localScale = Vector3.one * 0.9f;
         bs.name = "Block[" + insertRaw + "," + insertColumn + "]";
         bs.gameObject.layer = SquareRoot.gameObject.layer;
 
@@ -663,7 +684,7 @@ public class PlayerBase
     {
         UpdateState();
         CheckRemove();
-        //MoveMap();
+        MoveMap();
     }
 
     public bool CheckGameOver()

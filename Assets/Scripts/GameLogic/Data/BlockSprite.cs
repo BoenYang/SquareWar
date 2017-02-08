@@ -45,7 +45,7 @@ public class BlockSprite : MonoBehaviour
         bs.State = SquareState.Static;
         bs.Type = type;
 
-        go.transform.localScale = Vector3.one*0.9f;
+        go.transform.localScale = Vector3.one;
         return bs;
     }
 

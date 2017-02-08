@@ -62,7 +62,6 @@ public class SquareSprite : MonoBehaviour
         sr.sortingLayerName = "Game";
         sr.sortingOrder = 2;
         sr.sprite = sprites[type - 1];
-    
         ss.Column = c;
         ss.Row = r;
         ss.Type = type;
@@ -70,6 +69,8 @@ public class SquareSprite : MonoBehaviour
         ss.State = SquareState.Static;
 
         collider.size = new Vector2(0.7f, 0.7f);
+
+        go.transform.localScale = Vector3.one*0.8f;
         return ss;
     }
 

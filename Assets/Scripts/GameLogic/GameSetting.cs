@@ -2,7 +2,7 @@
 public static class GameSetting
 {
 
-    public static readonly float SquareWidth = 0.64f;
+    public static readonly float SquareWidth = 0.54f;
 
     public static readonly float BaseMapMoveSpeed = 0.02f;
 
@@ -14,7 +14,7 @@ public static class GameSetting
 
     public static readonly float SquareHungTime = 0.05f;
 
-    public static readonly int RawCount = 11;
+    public static readonly int RawCount = 12;
 
     public static readonly int ColumnCount = 6;
 

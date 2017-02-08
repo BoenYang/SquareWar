@@ -12,7 +12,7 @@ public class PVEMode : GameModeBase
     {
         NormalPlayer player = new NormalPlayer();
         RobotPlayer robotPlayer = new RobotPlayer();
-        player.SetMapPos(new Vector3(0.68f,0,0));
+        player.SetMapPos(new Vector3(1.09f,0.7f,0));
         robotPlayer.SetMapPos(new Vector3(10,0,0));
         players.Add(player);
         players.Add(robotPlayer);
