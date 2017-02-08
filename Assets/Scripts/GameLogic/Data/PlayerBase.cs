@@ -16,7 +16,7 @@ public class PlayerBase
 
     protected bool isRobot = false;
 
-    protected int raw;
+    protected int row;
 
     protected int column;
 
@@ -43,9 +43,9 @@ public class PlayerBase
         this.mapMng = mapMng;
       
 
-        raw = map.GetLength(0);
+        row = map.GetLength(0);
         column = map.GetLength(1);
-        SquareMap = new SquareSprite[raw, column];
+        SquareMap = new SquareSprite[row, column];
 
         GameObject player =  new GameObject();
         player.name = Name;
@@ -54,11 +54,11 @@ public class PlayerBase
         player.transform.localScale = Vector3.one;
         player.gameObject.layer = mapMng.gameObject.layer;
 
-        startPos = new Vector3(-column*GameSetting.SquareWidth/2f + GameSetting.SquareWidth/2, raw*GameSetting.SquareWidth/2 - GameSetting.SquareWidth/2, 0);
+        startPos = new Vector3(-column*GameSetting.SquareWidth/2f + GameSetting.SquareWidth/2, row*GameSetting.SquareWidth/2 - GameSetting.SquareWidth/2, 0);
         SquareRoot = player.transform;
         insertedRawCount = 0;
 
-        for (int r = 0; r < raw; r++)
+        for (int r = 0; r < row; r++)
         {
             for (int c = 0; c < column; c++)
             {
@@ -149,7 +149,7 @@ public class PlayerBase
             }
         }
         insertedRawCount++;
-        InsertRowAtIndex(raw - 1,squareWillInsert[0]);
+        InsertRowAtIndex(row - 1,squareWillInsert[0]);
 
         for (int i = 0; i < blocks.Count; i++)
         {
@@ -170,7 +170,7 @@ public class PlayerBase
         SquareSprite[] insertRawSquare = new SquareSprite[SquareMap.GetLength(1)];
         for (int i = 0; i < insertRawData.Length; i++)
         {
-            Vector3 pos = GetPos(raw + squareWillInsert.Count + insertedRawCount, i);
+            Vector3 pos = GetPos(row + squareWillInsert.Count + insertedRawCount, i);
             insertRawSquare[i] = SquareSprite.CreateSquare(insertRawData[i], -1, i);
             insertRawSquare[i].transform.SetParent(SquareRoot);
             insertRawSquare[i].transform.localPosition = pos;
@@ -270,12 +270,13 @@ public class PlayerBase
         {
             s1.Column = c2;
             s1.Row = r2;
+            SquareMap[r1, c1] = s2;
+            SquareMap[r2, c2] = s1;
 
             Vector3 moveToPos =  GetPos(r2 + insertedRawCount, c2);
             s1.MoveToPos(moveToPos, GameSetting.SquareSwapTime, () =>
             {
-                SquareMap[r1, c1] = s2;
-                SquareMap[r2, c2] = s1;
+                
             });
         }
 
@@ -353,7 +354,7 @@ public class PlayerBase
     private void CheckHorizontalRemove()
     {
         //检测水平方向消除
-        for (int r = 0; r < raw; r++)
+        for (int r = 0; r < row; r++)
         {
             int firstType = 0;
             int typeCount = 0;
@@ -418,7 +419,7 @@ public class PlayerBase
         {
             int firstType = 0;
             int typeCount = 0;
-            for (int r = 0; r < raw - 1; r++)
+            for (int r = 0; r < row - 1; r++)
             {
                 if (SquareMap[r, c] == null || !SquareMap[r, c].CanVerticalRemove())
                 {
@@ -431,7 +432,7 @@ public class PlayerBase
                 }
 
                 int i = r + 1;
-                for (i = r + 1; i < raw; i++)
+                for (i = r + 1; i < row; i++)
                 {
                     SquareSprite checkingSuqare = SquareMap[i, c];
                     if (checkingSuqare != null && checkingSuqare.Type == firstType && checkingSuqare.CanVerticalRemove())
@@ -456,7 +457,7 @@ public class PlayerBase
                 }
 
                 SquareSprite lastSquare = SquareMap[i - 1, c];
-                if (typeCount >= 3 && i == raw && lastSquare != null && lastSquare.CanVerticalRemove())
+                if (typeCount >= 3 && i == row && lastSquare != null && lastSquare.CanVerticalRemove())
                 {
                     RemoveData removeData = new RemoveData();
                     removeData.StartRow = r;
@@ -553,7 +554,7 @@ public class PlayerBase
                     above = SquareMap[squareNeedRemove.Row - 1, squareNeedRemove.Column];
                 }
 
-                if (squareNeedRemove.Row < raw - 1)
+                if (squareNeedRemove.Row < row - 1)
                 {
                     under = SquareMap[squareNeedRemove.Row + 1, squareNeedRemove.Column];
                 }
@@ -603,7 +604,7 @@ public class PlayerBase
 
             if (squareNeedRemove != null)
             {
-                SquareMap[squareNeedRemove.Row, squareNeedRemove.Column].Remove();
+                squareNeedRemove.Remove();
                 SquareMap[squareNeedRemove.Row, squareNeedRemove.Column] = null;
             }
         }
@@ -642,7 +643,7 @@ public class PlayerBase
 
     protected virtual void UpdateState()
     {
-        for (int r = 0; r < raw; r++)
+        for (int r = 0; r < row; r++)
         {
             for (int c = 0; c < column; c++)
             {

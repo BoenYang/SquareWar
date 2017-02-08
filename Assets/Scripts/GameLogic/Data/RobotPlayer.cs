@@ -18,6 +18,9 @@ public class RobotPlayer : PlayerBase
 
     private float operatorIntervalTimer = 0f;
 
+    private int[] columnSquareCount;
+
+    private int[] rowSquareCount;
 
     public class AICommand
     {
@@ -73,7 +76,9 @@ public class RobotPlayer : PlayerBase
     public override void InitPlayerMap(MapMng mapMng, int[,] map)
     {
         base.InitPlayerMap(mapMng, map);
-        clonedMap = new SquareData[raw, column];
+        columnSquareCount = new int[column];
+        rowSquareCount = new int[row];
+        clonedMap = new SquareData[row, column];
     }
 
     protected override void OnGetScore(int addScore)
@@ -84,30 +89,39 @@ public class RobotPlayer : PlayerBase
     public override void PlayerUpdate()
     {
         base.PlayerUpdate();
+        UpdateMapStatisticsData();
         AIThink();
     }
 
     private void AIThink()
     {
-        thinkIntervalTimer += Time.deltaTime;
-        if (thinkIntervalTimer > thinkInterval)
-        {
-            thinkIntervalTimer = 0;
-            if (commandList.Count == 0)
-            {
-                FindRemovableSquare();
-            }
-            if (commandList.Count == 0)
-            {
-                MakeThreeSquare();
-            }
-        }
 
         operatorIntervalTimer += Time.deltaTime;
         if (operatorIntervalTimer >= operatorInterval)
         {
             ExcuteAICommand();
             operatorIntervalTimer = 0;
+        }
+
+        thinkIntervalTimer += Time.deltaTime;
+        if (thinkIntervalTimer > thinkInterval)
+        {
+            thinkIntervalTimer = 0;
+
+            if (commandList.Count == 0)
+            {
+                FindRemovableSquare();
+            }
+
+            if (commandList.Count == 0)
+            {
+                MakeThreeSquare();
+            }
+
+            if (commandList.Count == 0)
+            {
+                MoveTopSquare();
+            }
         }
     }
 
@@ -116,25 +130,38 @@ public class RobotPlayer : PlayerBase
         if (commandList.Count > 0)
         {
             AICommand command = commandList[0];
-            command.SwapStep--;
-            SwapSquare(SquareMap[command.SwapSquare.Row, command.SwapSquare.Column], command.SwapDir);
-            if (command.SwapStep <= 0)
+            SquareSprite operateSquare = SquareMap[command.SwapSquare.Row, command.SwapSquare.Column];
+            Debug.LogFormat("[AI] Excute command [{0},{1}] {2}",command.SwapSquare.Row,command.SwapSquare.Column,command.SwapDir);
+
+            if (operateSquare == null)
             {
                 commandList.RemoveAt(0);
+            }
+            else
+            {
+                if (operateSquare.CanSwap())
+                {
+                    command.SwapStep--;
+                    SwapSquare(operateSquare, command.SwapDir);
+                    if (command.SwapStep <= 0)
+                    {
+                        commandList.RemoveAt(0);
+                    }
+                }
             }
         }
     }
 
     private void AddAICommand(AICommand command)
     {
-        Debug.Log(command);
+        //Debug.Log(command);
         commandList.Add(command);
     }
 
     private void FindRemovableSquare()
     {
         CopyMap(SquareMap,clonedMap);
-        for (int r = 0; r < raw; r++)
+        for (int r = 0; r < row; r++)
         {
             for (int c = 0; c < column; c++)
             {
@@ -216,7 +243,7 @@ public class RobotPlayer : PlayerBase
             return false;
         }
 
-        if (downRow > raw - 1)
+        if (downRow > row - 1)
         {
             return false;
         }
@@ -259,12 +286,12 @@ public class RobotPlayer : PlayerBase
         int down2Row = checkSprite.Row + 2;
         int c = checkSprite.Column + (int)dir;
 
-        if (down1Row > raw - 1)
+        if (down1Row > row - 1)
         {
             return false;
         }
 
-        if (down2Row > raw - 1)
+        if (down2Row > row - 1)
         {
             return false;
         }
@@ -418,7 +445,7 @@ public class RobotPlayer : PlayerBase
     /// 设当前检测为r行,c列的方块类型为T，组成三个个方块需要检测横向条件和纵向条件
     /// 横向组成三个方块的条件：
     /// 1.r行，不等于c列的其他列有两个T类型的方块
-    /// 2.行序号小于r行有一个类型为T的可到达r行的方块
+    /// 2.行序号小于r行有两个类型为T的可到达r行的方块
     /// 纵向组成两个方块的条件:
     /// 1.r行之上有两个可以到达[r-1,c],[r-2,c]的类型为T的方块
     /// 2.r+1,r+2行有两个可以到达[r+1,c],[r+2,c]的类型为T的方块 （本算法采用该条件，由于是从上往下扫描，可以囊括1.3两种情况）
@@ -493,6 +520,136 @@ public class RobotPlayer : PlayerBase
         }
     }
 
+    /// <summary>
+    /// 将顶部的方块移动到最近的方块数目最少的列
+    /// </summary>
+    private void MoveTopSquare()
+    {
+        for (int r = 0; r < row; r++)
+        {
+            for (int c = 0; c < column; c++)
+            {
+                SquareSprite square = SquareMap[r, c];
+                if (square != null)
+                {
+                    int rowCount = rowSquareCount[r];
+                    if (rowCount < 4)
+                    {
+                        int nearestLowSquareColumn = FindNearestLowSquareColumn(square);
+                        if (nearestLowSquareColumn != -1)
+                        {
+                            AICommand command = new AICommand();
+                            command.SwapSquare = SquareMap[r, c];
+                            command.SwapStep = Math.Abs(square.Column - nearestLowSquareColumn);
+                            command.SwapDir = (MoveDir) (-1 * Math.Sign(square.Column - nearestLowSquareColumn));
+                            AddAICommand(command);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// 统计每一行和每一列的方块数目
+    /// </summary>
+    private void UpdateMapStatisticsData()
+    {
+        Array.Clear(columnSquareCount,0,columnSquareCount.Length);
+        Array.Clear(rowSquareCount, 0, rowSquareCount.Length);
+
+        for (int c = 0; c < column; c++)
+        {
+            for (int r = 0; r < row; r++)
+            {
+                if (SquareMap[r, c] != null)
+                {
+                    columnSquareCount[c]++;
+                    rowSquareCount[r]++;
+                }
+            }
+        }
+    }
+
+    private int FindNearestLowSquareColumn(SquareSprite square)
+    {
+        int left = square.Column;
+        int right = square.Column;
+        int leftColumnCount = int.MaxValue;
+        int rightColumnCount = int.MaxValue;
+
+        //left
+        if (square.Column - 1 >= 0)
+        {
+            
+            for (int i = square.Column - 1; i >= 0; i--)
+            {
+                if (columnSquareCount[i] < leftColumnCount)
+                {
+                    if (columnSquareCount[i] < columnSquareCount[square.Column] - 1)
+                    {
+                        left = i;
+                        leftColumnCount = columnSquareCount[i];
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+
+        if (square.Column + 1 < column - 1)
+        {
+            //right
+            for (int i = square.Column + 1; i < column; i++)
+            {
+                if (columnSquareCount[i] < rightColumnCount)
+                {
+                    if (columnSquareCount[i] < columnSquareCount[square.Column] - 1)
+                    {
+                        right = i;
+                        rightColumnCount = columnSquareCount[i];
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+
+        if (left != square.Column && right != square.Column)
+        {
+            return leftColumnCount >= rightColumnCount ? left : right;
+        }
+        else if (left == square.Column)
+        {
+            if (right == square.Column)
+            {
+                return -1;
+            }
+            else
+            {
+                return right;
+            }
+        }
+        else 
+        {
+            if (right == square.Column)
+            {
+                return left;
+            }
+            else
+            {
+                return -1;
+            }
+        }
+
+       
+    }
+
     private SquareSprite FindNearestMatchSquareInRaw(SquareData square,int row)
     {
         int gap = int.MaxValue;
@@ -550,12 +707,12 @@ public class RobotPlayer : PlayerBase
             }
         }else if (targetRaw > r)   //目标位置在移动方块的下面
         {
-            int up = raw;
-            int down = targetRaw;
+            int up = row;
+            int down = targetRaw - 1;
 
             for (int i = down; i <= up; i++)
             {
-                if (SquareMap[i, c] != null)
+                if (SquareMap[i, targetColumn] != null)
                 {
                     canMove = false;
                     break;
