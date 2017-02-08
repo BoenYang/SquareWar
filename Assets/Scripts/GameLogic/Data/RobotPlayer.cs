@@ -1,7 +1,5 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
 
 public class RobotPlayer : PlayerBase
@@ -21,6 +19,8 @@ public class RobotPlayer : PlayerBase
     private int[] columnSquareCount;
 
     private int[] rowSquareCount;
+
+    private int[,] rowTypeCount;
 
     public class AICommand
     {
@@ -78,6 +78,7 @@ public class RobotPlayer : PlayerBase
         base.InitPlayerMap(mapMng, map);
         columnSquareCount = new int[column];
         rowSquareCount = new int[row];
+        rowTypeCount = new int[row,5];
         clonedMap = new SquareData[row, column];
     }
 
@@ -131,8 +132,7 @@ public class RobotPlayer : PlayerBase
         {
             AICommand command = commandList[0];
             SquareSprite operateSquare = SquareMap[command.SwapSquare.Row, command.SwapSquare.Column];
-            Debug.LogFormat("[AI] Excute command [{0},{1}] {2}",command.SwapSquare.Row,command.SwapSquare.Column,command.SwapDir);
-
+            //Debug.LogFormat("[AI] Excute command [{0},{1}] {2}",command.SwapSquare.Row,command.SwapSquare.Column,command.SwapDir);
             if (operateSquare == null)
             {
                 commandList.RemoveAt(0);
@@ -439,7 +439,6 @@ public class RobotPlayer : PlayerBase
         return false;
     }
 
-
     /// <summary>
     /// 找到两个个方块移动组成三个方块
     /// 设当前检测为r行,c列的方块类型为T，组成三个个方块需要检测横向条件和纵向条件
@@ -454,11 +453,11 @@ public class RobotPlayer : PlayerBase
     /// <returns></returns>
     private void MakeThreeSquare()
     {
-        for (int r = 0; r < clonedMap.GetLength(0); r++)
+        for (int r = 0; r < row; r++)
         {
-            for (int c = 0; c < clonedMap.GetLength(1); c++)
+            for (int c = 0; c < column; c++)
             {
-                SquareData square = clonedMap[r, c];
+                SquareSprite square = SquareMap[r, c];
                 if (square != null)
                 {
                     //纵向方法
@@ -513,11 +512,129 @@ public class RobotPlayer : PlayerBase
                         }
                     }
 
-                    //横向方法
+        
+                }
+            }
+        }
+
+        for (int r = 0; r < row; r++)
+        {
+
+            int type = -1;
+
+            for (int t = 0; t < 5; t++)
+            {
+                if (rowTypeCount[r, t] >= 3)
+                {
+                    type = t + 1;
+                    break;
+                }
+            }
+
+            if (type < 0)
+            {
+                continue;
+            }
+
+            //横向方法
+            if (rowTypeCount[r, type - 1] >= 3)
+            {
+                int[] squareIndexes = GetSquareIndexesAtRowByType(r, type);
+
+                if (rowTypeCount[r, type - 1] == 3)
+                {
+                    SquareSprite center = SquareMap[r, squareIndexes[1]];
+                    SquareSprite left = SquareMap[r, squareIndexes[0]];
+                    SquareSprite right = SquareMap[r, squareIndexes[2]];
+
+                    if (left.Column == center.Column - 1)
+                    {
+                        AICommand command = new AICommand();
+                        command.SwapSquare = right;
+                        command.SwapDir = MoveDir.Left;
+                        command.SwapStep = right.Column - center.Column - 1;
+                        AddAICommand(command);
+                        return;
+                    }
+
+                    if (right.Column == center.Column + 1)
+                    {
+                        AICommand command = new AICommand();
+                        command.SwapSquare = left;
+                        command.SwapDir = MoveDir.Right;
+                        command.SwapStep = center.Column - left.Column - 1;
+                        AddAICommand(command);
+                        return;
+                    }
+
+
+                    if (right.Column != center.Column + 1 && left.Column != center.Column - 1)
+                    {
+                        AICommand command1 = new AICommand();
+                        command1.SwapSquare = right;
+                        command1.SwapDir = MoveDir.Left;
+                        command1.SwapStep = right.Column - center.Column - 1;
+                        AddAICommand(command1);
+
+                        AICommand command2 = new AICommand();
+                        command2.SwapSquare = left;
+                        command2.SwapDir = MoveDir.Right;
+                        command2.SwapStep = center.Column - left.Column - 1;
+                        AddAICommand(command2);
+                        return;
+                    }
+
+                }
+                else if (rowTypeCount[r, type - 1] == 4)
+                {
+                    SquareSprite center = SquareMap[r, squareIndexes[2]];
+                    SquareSprite left = SquareMap[r, squareIndexes[1]];
+                    SquareSprite right = SquareMap[r, squareIndexes[3]];
+
+                    if (left.Column == center.Column - 1)
+                    {
+                        AICommand command = new AICommand();
+                        command.SwapSquare = right;
+                        command.SwapDir = MoveDir.Left;
+                        command.SwapStep = right.Column - center.Column - 1;
+                        AddAICommand(command);
+                        return;
+                    }
+
+                    if (right.Column == center.Column + 1)
+                    {
+                        AICommand command = new AICommand();
+                        command.SwapSquare = left;
+                        command.SwapDir = MoveDir.Right;
+                        command.SwapStep = center.Column - left.Column - 1;
+                        AddAICommand(command);
+                        return;
+                    }
 
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// 获取r行中类型为type的所有方块列索引
+    /// </summary>
+    /// <param name="r">行索引</param>
+    /// <param name="type">类型</param>
+    /// <returns>类型为type的所有方块列索引</returns>
+    private int[] GetSquareIndexesAtRowByType(int r,int type)
+    {
+        int[] squareIndexes = new int[rowTypeCount[r,type - 1]];
+        int i = 0;
+        for (int c = 0; c < column; c++)
+        {
+            if (SquareMap[r, c] != null && SquareMap[r,c].Type == type)
+            {
+                squareIndexes[i] = c;
+                i++;
+            }
+        }
+        return squareIndexes;
     }
 
     /// <summary>
@@ -552,12 +669,21 @@ public class RobotPlayer : PlayerBase
     }
 
     /// <summary>
-    /// 统计每一行和每一列的方块数目
+    /// 统计每一行和每一列的方块数目,每一行各个类型的方块数目
     /// </summary>
     private void UpdateMapStatisticsData()
     {
         Array.Clear(columnSquareCount,0,columnSquareCount.Length);
         Array.Clear(rowSquareCount, 0, rowSquareCount.Length);
+
+
+        for (int r = 0; r < rowTypeCount.GetLength(0); r++)
+        {
+            for (int t = 0; t < rowTypeCount.GetLength(1); t++)
+            {
+                rowTypeCount[r, t] = 0;
+            }
+        }
 
         for (int c = 0; c < column; c++)
         {
@@ -567,6 +693,7 @@ public class RobotPlayer : PlayerBase
                 {
                     columnSquareCount[c]++;
                     rowSquareCount[r]++;
+                    rowTypeCount[r, SquareMap[r, c].Type - 1]++;
                 }
             }
         }
@@ -650,7 +777,7 @@ public class RobotPlayer : PlayerBase
        
     }
 
-    private SquareSprite FindNearestMatchSquareInRaw(SquareData square,int row)
+    private SquareSprite FindNearestMatchSquareInRaw(SquareSprite square,int row)
     {
         int gap = int.MaxValue;
         SquareSprite matchSquare = null;
@@ -668,7 +795,6 @@ public class RobotPlayer : PlayerBase
         }
         return matchSquare;
     }
-
 
     /// <summary>
     /// 检查方块是否可以移动指定行和指定列

@@ -663,7 +663,7 @@ public class PlayerBase
     {
         UpdateState();
         CheckRemove();
-        MoveMap();
+        //MoveMap();
     }
 
     public bool CheckGameOver()
