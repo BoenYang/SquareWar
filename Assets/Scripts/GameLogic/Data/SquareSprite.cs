@@ -240,6 +240,7 @@ public class SquareSprite : MonoBehaviour
                     SquareSprite under = player.SquareMap[Row + 1, Column];
                     if (under == null)
                     {
+
                         Chain = true;
                         Fall();
                     }
@@ -266,3 +267,4 @@ public class SquareSprite : MonoBehaviour
     }
 
 }
+

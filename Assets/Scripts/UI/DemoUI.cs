@@ -7,9 +7,11 @@ public class DemoUI : MonoBehaviour
 
     public Text Player2Score;
 
-    public Text Chain;
+    public Text Player1Chain;
 
-    public RawImage Image;
+    public Text Player2Chain;
+
+    public GameObject Player2View;
 
     public static DemoUI Ins;
 

@@ -22,6 +22,8 @@ public class RobotPlayer : PlayerBase
 
     private int[,] rowTypeCount;
 
+    private PlayerBase humanPlayer;
+
     public class AICommand
     {
         public SquareSprite SwapSquare;
@@ -34,6 +36,7 @@ public class RobotPlayer : PlayerBase
             return string.Format("Swap [{0},{1} to {2}] using step {3}", SwapSquare.Row, SwapSquare.Column, SwapDir.ToString(),SwapStep);
         }
     }
+
     public class SquareData
     {
         public int Row;
@@ -64,7 +67,6 @@ public class RobotPlayer : PlayerBase
         {
             State = SquareState.Clear;
         }
-
     }
 
     public RobotPlayer()
@@ -80,11 +82,6 @@ public class RobotPlayer : PlayerBase
         rowSquareCount = new int[row];
         rowTypeCount = new int[row,5];
         clonedMap = new SquareData[row, column];
-    }
-
-    protected override void OnGetScore(int addScore)
-    {
-        DemoUI.Ins.Player2Score.text = Name + ": " + Score;
     }
 
     public override void PlayerUpdate()
@@ -689,7 +686,7 @@ public class RobotPlayer : PlayerBase
         {
             for (int r = 0; r < row; r++)
             {
-                if (SquareMap[r, c] != null)
+                if (SquareMap[r, c] != null && SquareMap[r,c].State != SquareState.Hide)
                 {
                     columnSquareCount[c]++;
                     rowSquareCount[r]++;
@@ -851,21 +848,6 @@ public class RobotPlayer : PlayerBase
             canMove = false;
         }
         return canMove;
-    }
-
-    private int SimulateSwap(int r, int c, MoveDir dir)
-    {
-        return 0;
-    }
-
-    private void SimelateRemove()
-    {
-
-    }
-
-    private void SimulateDrop()
-    {
-
     }
 
     private void CopyMap(SquareSprite[,] src, SquareData[,] dst)

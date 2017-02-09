@@ -51,7 +51,7 @@ public class MapMng : MonoBehaviour
         int[] willInsertRaw = new int[GameSetting.ColumnCount];
         for (int i = 0; i < GameSetting.ColumnCount; i++)
         {
-            int type = Random.Range(1, 5);
+            int type = Random.Range(1, 6);
             willInsertRaw[i] = type;
         }
         return willInsertRaw;

@@ -4,6 +4,11 @@ using UnityEngine;
 
 public class PlayerBase
 {
+
+    public delegate void GetScoreDelegate(int addScore);
+
+    public delegate void ChainDelegate(int chainCount);
+
     public string Name = "";
 
     public int Score = 0;
@@ -13,6 +18,10 @@ public class PlayerBase
     public bool IsRobot { get { return isRobot; } }
 
     public Transform SquareRoot;
+
+    public event GetScoreDelegate OnGetScore = null;
+
+    public event ChainDelegate OnChain = null;
 
     protected bool isRobot = false;
 
@@ -323,16 +332,6 @@ public class PlayerBase
 
     private float chainInterval;
 
-    protected virtual void OnGetScore(int addScore)
-    {
-
-    }
-
-    protected virtual void OnChain(int chainCount)
-    {
-
-    }
-
     private void CheckRemove()
     {
         removeList.Clear();
@@ -352,7 +351,10 @@ public class PlayerBase
             {
                 chainCount = 1;
                 chainTimer = 0f;
-                OnChain(chainCount);
+                if (OnChain != null)
+                {
+                    OnChain(chainCount);
+                }
             }
         }
     }
@@ -367,7 +369,10 @@ public class PlayerBase
                 scoreGain += 6*(chainCount - 1);
             }
             Score += scoreGain;
-            OnGetScore(scoreGain);
+            if (OnGetScore != null)
+            {
+                OnGetScore(scoreGain);
+            }
         }
        
     }
