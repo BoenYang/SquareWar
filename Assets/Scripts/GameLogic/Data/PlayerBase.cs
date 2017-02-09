@@ -540,7 +540,10 @@ public class PlayerBase
             chainCount++;
             chainInterval = removeData.Count* GameSetting.SquareRemoveInterval;
             chainTimer = 0f;
-            OnChain(chainCount);
+            if (OnChain != null)
+            {
+                OnChain(chainCount);
+            }
         }
     }
 
@@ -689,7 +692,7 @@ public class PlayerBase
     {
         UpdateState();
         CheckRemove();
-        MoveMap();
+        //MoveMap();
     }
 
     public bool CheckGameOver()

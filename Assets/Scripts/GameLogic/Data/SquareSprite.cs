@@ -126,6 +126,14 @@ public class SquareSprite : MonoBehaviour
 
     public void Remove()
     {
+        if (Row - 1 > 0)
+        {
+            SquareSprite above = player.SquareMap[Row - 1, Column];
+            if (above != null)
+            {
+                above.Chain = true;
+            }
+        }
         isAnimating = false;
         Destroy(gameObject);
     }
@@ -240,23 +248,18 @@ public class SquareSprite : MonoBehaviour
                     SquareSprite under = player.SquareMap[Row + 1, Column];
                     if (under == null)
                     {
-
-                        Chain = true;
                         Fall();
+                    }
+                    else if (under.State == SquareState.Clear)
+                    {
+                        State = SquareState.Static;
                     }
                     else
                     {
-                        if (under.State == SquareState.Clear)
+                        State = under.State;
+                        if (under.Chain)
                         {
-                            State = SquareState.Static;
-                        }
-                        else
-                        {
-                            State = under.State;
-                            if (under.Chain)
-                            {
-                                Chain = under.Chain;
-                            }
+                            Chain = under.Chain;
                         }
                     }
                 }
