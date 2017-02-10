@@ -33,7 +33,6 @@ public class BlockSprite : MonoBehaviour
         BlockSprite bs = go.AddComponent<BlockSprite>();
         SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
         string sprite = data.GetLength(0) + "-" + data.GetLength(1);
-
         sr.sortingLayerName = "Game";
         sr.sortingOrder = 2;
 
@@ -45,7 +44,7 @@ public class BlockSprite : MonoBehaviour
         bs.State = SquareState.Static;
         bs.Type = type;
 
-        go.transform.localScale = Vector3.one * 0.85f;
+        go.transform.localScale = Vector3.one*0.85f;
         return bs;
     }
 
@@ -53,8 +52,8 @@ public class BlockSprite : MonoBehaviour
     {
         squares = new SquareSprite[SquireType.GetLength(0),SquireType.GetLength(1)];
 
-        float startX = -SquireType.GetLength(1)*GameSetting.SquareWidth/2f + GameSetting.SquareWidth/2f;
-        float startY = SquireType.GetLength(0)*GameSetting.SquareWidth/2f - GameSetting.SquareWidth/2f;
+        float startX = (-SquireType.GetLength(1)*GameSetting.SquareWidth/ 2f + GameSetting.SquareWidth / 2f)/transform.localScale.x;
+        float startY = (SquireType.GetLength(0)*GameSetting.SquareWidth/2f - GameSetting.SquareWidth/2f)/transform.localScale.y;
         for (int r = 0; r < SquireType.GetLength(0); r++)
         {
             for (int c = 0; c < SquireType.GetLength(1); c++)
@@ -63,8 +62,7 @@ public class BlockSprite : MonoBehaviour
                 ss.Row = Raw - SquireType.GetLength(0) + r + 1;
                 ss.Column = Column + c;
                 ss.transform.SetParent(transform);
-                ss.transform.localPosition =  new Vector3(startX + c * GameSetting.SquareWidth, startY -  r * GameSetting.SquareWidth, 0);
-                ss.transform.localScale = Vector3.one * 0.9f;
+                ss.transform.localPosition =  new Vector3(startX + c * GameSetting.SquareWidth/transform.localScale.x, startY -  r * GameSetting.SquareWidth/transform.localScale.y, 0);
                 ss.name = "Rect[" + r + "," + c + "]";
                 ss.gameObject.layer = gameObject.layer;
                 ss.State = SquareState.Hide;

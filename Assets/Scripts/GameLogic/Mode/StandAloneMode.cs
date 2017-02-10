@@ -22,6 +22,7 @@ public class StandAloneMode : GameModeBase
 
         players = new List<PlayerBase>();
         players.Add(player);
+        DemoUI.Ins.Player1Score.text = "0";
         DemoUI.Ins.Player2View.SetActive(false);
         MapMng.Instance.SetPlayer(players);
         MapMng.Instance.InitMap(Mode);
