@@ -36,7 +36,7 @@ public class BlockSprite : MonoBehaviour
         sr.sortingLayerName = "Game";
         sr.sortingOrder = 3;
 
-        //sr.material = Resources.Load<Material>("Materials/SpriteWithStencil");
+        sr.material = Resources.Load<Material>("Materials/SpriteWithStencil");
 
         bs.Renderer = sr;
         bs.Renderer.sprite = Resources.Load<Sprite>(sprite);

@@ -70,6 +70,7 @@ public class MapMng : MonoBehaviour
         for (int i = 0; i < Players.Count; i++)
         {
             Players[i].InitPlayerMap(this,mapData);
+            Players[i].InitMapMask();
             Players[i].AddWillInsertRaw(willInsertRaw);
         }
         StartCoroutine(MapUpdate());

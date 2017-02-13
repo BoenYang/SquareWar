@@ -64,7 +64,7 @@ public class SquareSprite : MonoBehaviour
         sr.sortingOrder = 3;
         sr.sprite = sprites[type - 1];
 
-        //sr.material = Resources.Load<Material>("Materials/SpriteWithStencil");
+        sr.material = Resources.Load<Material>("Materials/SpriteWithStencil");
 
         ss.Column = c;
         ss.Row = r;

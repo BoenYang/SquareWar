@@ -26,15 +26,12 @@ public class PVEMode : GameModeBase
         robotPlayer.OnGetScore += OnRobotGetScore;
         robotPlayer.OnChain += OnRobotChain;
 
-
         player.SetMapPos(new Vector3(1.09f,0.7f,0));
         robotPlayer.SetMapPos(new Vector3(10,0,0));
         players.Add(player);
         players.Add(robotPlayer);
 
-        DemoUI.Ins.Player1Score.text = player.Name + "：0";
-        DemoUI.Ins.Player2Score.text = robotPlayer.Name + "：0";
-        DemoUI.Ins.Player2View.SetActive(true);
+        DemoUI.Ins.Init(Mode);
         MapMng.Instance.SetPlayer(players);
         MapMng.Instance.InitMap(Mode);
     }

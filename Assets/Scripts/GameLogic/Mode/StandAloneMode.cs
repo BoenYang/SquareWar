@@ -15,15 +15,16 @@ public class StandAloneMode : GameModeBase
     public override void Init()
     {
         player = new NormalPlayer();
-        player.SetMapPos(new Vector3(1.09f, 0.7f, 0));
+        player.SetMapPos(new Vector3(0, 0.7f, 0));
+
         player.OnChain += OnPlayerChain;
         player.OnGetScore += OnPlayerGetScore;
 
-
         players = new List<PlayerBase>();
         players.Add(player);
-        DemoUI.Ins.Player1Score.text = "0";
-        DemoUI.Ins.Player2View.SetActive(false);
+
+        DemoUI.Ins.Init(Mode);
+     
         MapMng.Instance.SetPlayer(players);
         MapMng.Instance.InitMap(Mode);
     }
