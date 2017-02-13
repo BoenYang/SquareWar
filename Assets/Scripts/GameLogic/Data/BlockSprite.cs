@@ -200,18 +200,20 @@ public class BlockSprite : MonoBehaviour
     {
         isAnimating = true;
         Vector3 targetPos = transform.localPosition - new Vector3(0, GameSetting.SquareWidth, 0);
+
+        for (int r = Raw; r > Raw - SquireType.GetLength(0); r--)
+        {
+            for (int c = Column; c < Column + SquireType.GetLength(1); c++)
+            {
+                player.SquareMap[r, c].Row += 1;
+                player.SquareMap[r + 1, c] = player.SquareMap[r, c];
+                player.SquareMap[r, c] = null;
+            }
+        }
+        Raw = Raw + 1;
+
         transform.DOLocalMove(targetPos, GameSetting.SquareFallTime).SetRelative(false).SetEase(Ease.Linear).OnComplete(() =>
         {
-            for (int r = Raw; r > Raw - SquireType.GetLength(0); r--)
-            {
-                for (int c = Column; c < Column + SquireType.GetLength(1); c++)
-                {
-                    player.SquareMap[r, c].Row += 1;
-                    player.SquareMap[r + 1, c] = player.SquareMap[r, c];
-                    player.SquareMap[r, c] = null;
-                }
-            }
-            Raw = Raw + 1;
             isAnimating = false;
         });
     }
@@ -232,11 +234,6 @@ public class BlockSprite : MonoBehaviour
                 if (!HasSupport())
                 {
                     State = SquareState.Hung;
-                    isAnimating = true;
-                    transform.DOScale(transform.localScale, GameSetting.SquareHungTime).OnComplete(() =>
-                    {
-                        isAnimating = false;
-                    });
                 }
                 break;
             case SquareState.Hung:

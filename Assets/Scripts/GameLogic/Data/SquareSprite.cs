@@ -70,8 +70,6 @@ public class SquareSprite : MonoBehaviour
         ss.Row = r;
         ss.Type = type;
         ss.Renderer = sr;
-
-
         ss.State = SquareState.Static;
 
         collider.size = new Vector2(0.7f, 0.7f);

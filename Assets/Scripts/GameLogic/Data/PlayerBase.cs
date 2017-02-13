@@ -112,6 +112,30 @@ public class PlayerBase
         OnChain(chainCount);
     }
 
+    public void InitMapMask()
+    {
+        Sprite sprite = Resources.Load<Sprite>("fk1");
+
+        GameObject mask = new GameObject(Name + "MapMask");
+        mask.gameObject.layer = mapMng.gameObject.layer;
+        mask.transform.SetParent(mapMng.transform);
+        mask.transform.localPosition = mapOffset;
+
+        SpriteRenderer sr = mask.AddComponent<SpriteRenderer>();
+        sr.sprite = sprite;
+        sr.material = Resources.Load<Material>("Materials/SpriteStencilMask");
+        sr.sortingLayerName = "Game";
+        sr.sortingOrder = 1;
+
+        float mapWidth = GameSetting.SquareWidth * column * 100;
+        float mapHeight = GameSetting.SquareWidth * row * 100;
+
+        float xScale = mapWidth / sprite.rect.size.x;
+        float yScale = mapHeight / sprite.rect.size.y;
+
+        mask.transform.localScale = new Vector3(xScale, yScale, 0);
+    }
+
     #region 插入行算法
 
     public bool NeedAddNewRaw()
@@ -769,31 +793,6 @@ public class PlayerBase
         return startPos + new Vector3(c * GameSetting.SquareWidth, -r * GameSetting.SquareWidth, 0);
     }
 
-    public void InitMapMask()
-    {
-        Sprite sprite = Resources.Load<Sprite>("fk1");
-
-        GameObject mask = new GameObject(Name + "MapMask");
-        mask.gameObject.layer = mapMng.gameObject.layer;
-        mask.transform.SetParent(mapMng.transform);
-        mask.transform.localPosition = mapOffset;
-
-        SpriteRenderer sr = mask.AddComponent<SpriteRenderer>();
-        sr.sprite = sprite;
-        sr.material = Resources.Load<Material>("Materials/SpriteStencilMask");
-        sr.sortingLayerName = "Game";
-        sr.sortingOrder = 1;
-
-        float mapWidth = GameSetting.SquareWidth*column*100;
-        float mapHeight = GameSetting.SquareWidth*row*100;
-
-        float xScale = mapWidth / sprite.rect.size.x;
-        float yScale = mapHeight / sprite.rect.size.y;
-
-        mask.transform.localScale = new Vector3(xScale,yScale,0);
-        
-
-    }
 }
 
 
