@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
 public class PlayerBase
 {
 
@@ -9,19 +10,22 @@ public class PlayerBase
 
     public delegate void ChainDelegate(int chainCount);
 
+    public event GetScoreDelegate OnGetScore = null;
+
+    public event ChainDelegate OnChain = null;
+
     public string Name = "";
 
     public int Score = 0;
 
     public SquareSprite[,] SquareMap = null;
 
-    public bool IsRobot { get { return isRobot; } }
+    public float TotalGameTime = 0;
 
+    [System.NonSerialized]
     public Transform SquareRoot;
 
-    public event GetScoreDelegate OnGetScore = null;
-
-    public event ChainDelegate OnChain = null;
+    public bool IsRobot { get { return isRobot; } }
 
     protected bool isRobot = false;
 
@@ -32,6 +36,10 @@ public class PlayerBase
     private int insertedRawCount = 0;
 
     private float moveIntervalTimer;
+
+    public float currentMapMoveInterval;
+
+    private float moveIntervalSubTimer;
 
     private bool gameOver = false;
 
@@ -55,10 +63,14 @@ public class PlayerBase
     {
         this.mapMng = mapMng;
 
+        insertedRawCount = 0;
+        currentMapMoveInterval = GameSetting.BaseMapMoveInterval;
+
         row = map.GetLength(0);
         column = map.GetLength(1);
-        SquareMap = new SquareSprite[row, column];
+        startPos = new Vector3(-column * GameSetting.SquareWidth / 2f + GameSetting.SquareWidth / 2, row * GameSetting.SquareWidth / 2 - GameSetting.SquareWidth / 2, 0);
 
+        SquareMap = new SquareSprite[row, column];
         backgroundMap = new List<SpriteRenderer[]>();
 
         GameObject player =  new GameObject();
@@ -68,9 +80,7 @@ public class PlayerBase
         player.transform.localScale = Vector3.one;
         player.gameObject.layer = mapMng.gameObject.layer;
 
-        startPos = new Vector3(-column*GameSetting.SquareWidth/2f + GameSetting.SquareWidth/2, row*GameSetting.SquareWidth/2 - GameSetting.SquareWidth/2, 0);
         SquareRoot = player.transform;
-        insertedRawCount = 0;
 
         for (int r = 0; r < row; r++)
         {
@@ -672,8 +682,17 @@ public class PlayerBase
             return;
         }
 
+        TotalGameTime += Time.deltaTime;
         moveIntervalTimer += Time.deltaTime;
-        if (moveIntervalTimer >= GameSetting.BaseMapMoveInterval)
+        moveIntervalSubTimer += Time.deltaTime;
+
+        if (moveIntervalSubTimer > GameSetting.SpeedAddInterval)
+        {
+            moveIntervalSubTimer = 0;
+            currentMapMoveInterval -= GameSetting.MoveIntervalSubStep;
+        }
+
+        if (moveIntervalTimer >= currentMapMoveInterval)
         {
 
             if (moveDistance > GameSetting.SquareWidth)

@@ -20,4 +20,8 @@ public static class GameSetting
 
     public static readonly float SquareFallTime = 0.05f;
 
+    public static readonly float SpeedAddInterval = 30;
+
+    public static readonly float MoveIntervalSubStep = 0.1f;
+
 }
