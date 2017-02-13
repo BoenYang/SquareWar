@@ -47,14 +47,19 @@ public class PlayerBase
 
     private List<BlockSprite> blocks = new List<BlockSprite>(); 
 
+    private List<SpriteRenderer[]> backgroundMap = new List<SpriteRenderer[]>();
+
+    private List<SpriteRenderer> backgroundCache = new List<SpriteRenderer>(); 
+
     public virtual void InitPlayerMap(MapMng mapMng, int[,] map)
     {
         this.mapMng = mapMng;
-      
 
         row = map.GetLength(0);
         column = map.GetLength(1);
         SquareMap = new SquareSprite[row, column];
+
+        backgroundMap = new List<SpriteRenderer[]>();
 
         GameObject player =  new GameObject();
         player.name = Name;
@@ -69,6 +74,9 @@ public class PlayerBase
 
         for (int r = 0; r < row; r++)
         {
+            SpriteRenderer[] rowBackground = new SpriteRenderer[column];
+            backgroundMap.Add(rowBackground);
+
             for (int c = 0; c < column; c++)
             {
                 if (map[r, c] != 0)
@@ -81,25 +89,14 @@ public class PlayerBase
                     ss.SetPlayer(this);
                     SquareMap[r, c] = ss;
                     SquareMap[r, c].gameObject.layer = SquareRoot.gameObject.layer;
-
-                  
                 }
                 else
                 {
                     SquareMap[r, c] = null;
                 }
 
-                Sprite bg = Resources.Load<Sprite>("fk" + (((c + r) % 2) + 1));
-
-                GameObject sprite = new GameObject("sprite");
-                SpriteRenderer sr = sprite.AddComponent<SpriteRenderer>();
-                sr.sprite = bg;
-                sr.sortingLayerName = "Game";
-                sr.sortingOrder = 1;
-                sprite.layer = SquareRoot.gameObject.layer;
-                sprite.transform.SetParent(SquareRoot);
-                sprite.transform.localPosition = GetPos(r, c);
-                sprite.transform.localScale = Vector3.one*0.8f;
+                SpriteRenderer sr = CreateBackground(r, c);
+                rowBackground[c] = sr;
             }
         }
         OnChain(chainCount);
@@ -124,7 +121,7 @@ public class PlayerBase
 
     public void InsertRowAtIndex(int insertRowIndex,SquareSprite[] squareData)
     {
-
+        //从第1行开始往上移动
         for (int r = 1; r <= insertRowIndex; r++)
         {
             for (int c = 0; c < column; c++)
@@ -136,6 +133,16 @@ public class PlayerBase
                 }
             }
         }
+
+        SpriteRenderer[] removeBackground = backgroundMap[0];
+        backgroundMap.RemoveAt(0);
+
+        for (int i = 0; i < removeBackground.Length; i++)
+        {
+            removeBackground[i].gameObject.SetActive(false);
+            backgroundCache.Add(removeBackground[i]);
+        }
+
 
         //最后一行插入
         for (int i = 0; i < squareData.Length; i++)
@@ -156,20 +163,12 @@ public class PlayerBase
             return;
         }
 
-        if (squareWillInsert[0].Length > SquareMap.GetLength(0))
+        if (IsReachTop())
         {
-            Debug.LogError("数据格式不合法");
+            gameOver = true;
             return;
         }
 
-        for (int c = 0; c < SquareMap.GetLength(1); c++)
-        {
-            if(SquareMap[0,c] != null)
-            {
-                gameOver = true;
-                return;
-            }
-        }
         insertedRawCount++;
         InsertRowAtIndex(row - 1,squareWillInsert[0]);
 
@@ -189,7 +188,9 @@ public class PlayerBase
             return;
         }
 
+        SpriteRenderer[] rowBackground = new SpriteRenderer[insertRawData.Length];
         SquareSprite[] insertRawSquare = new SquareSprite[SquareMap.GetLength(1)];
+
         for (int i = 0; i < insertRawData.Length; i++)
         {
             Vector3 pos = GetPos(row + squareWillInsert.Count + insertedRawCount, i);
@@ -201,19 +202,45 @@ public class PlayerBase
             insertRawSquare[i].SetGray(true);
             insertRawSquare[i].SetPlayer(this);
 
-            Sprite bg = Resources.Load<Sprite>("fk" + (((row + squareWillInsert.Count + insertedRawCount + i) % 2) + 1));
-            GameObject sprite = new GameObject("sprite");
-            SpriteRenderer sr = sprite.AddComponent<SpriteRenderer>();
-            sr.sprite = bg;
+            SpriteRenderer sr = CreateBackground(row + squareWillInsert.Count + insertedRawCount,i);
+            rowBackground[i] = sr;
+        }
+
+        backgroundMap.Add(rowBackground);
+        squareWillInsert.Add(insertRawSquare);
+    }
+
+    private SpriteRenderer CreateBackground(int r,int c)
+    {
+        Sprite bg = Resources.Load<Sprite>("fk" + (((r + c) % 2) + 1));
+        GameObject sprite = null;
+        SpriteRenderer sr = null;
+
+        if (backgroundCache.Count > 0)
+        {
+            sprite = backgroundCache[0].gameObject;
+            sprite.SetActive(true);
+            sr = backgroundCache[0];
+            backgroundCache.RemoveAt(0);
+        }
+        else
+        {
+            sprite = new GameObject("sprite");
+            sr = sprite.AddComponent<SpriteRenderer>();
+
             sr.sortingLayerName = "Game";
-            sr.sortingOrder = 1;
+            sr.sortingOrder = 2;
+
+            //sr.material = Resources.Load<Material>("Materials/SpriteWithStencil");
+
             sprite.layer = SquareRoot.gameObject.layer;
             sprite.transform.SetParent(SquareRoot);
-            sprite.transform.localPosition = GetPos(row + squareWillInsert.Count + insertedRawCount, i);
             sprite.transform.localScale = Vector3.one * 0.8f;
-
         }
-        squareWillInsert.Add(insertRawSquare);
+
+        sprite.transform.localPosition = GetPos(r, c);
+        sr.sprite = bg;
+        return sr;
     }
 
     public void InsertBlockAtTopLeft(int[,] data,int type)
@@ -658,6 +685,15 @@ public class PlayerBase
         moveIntervalTimer += Time.deltaTime;
         if (moveIntervalTimer >= GameSetting.BaseMapMoveInterval)
         {
+
+            if (moveDistance > GameSetting.SquareWidth)
+            {
+                if (IsReachTop())
+                {
+                    gameOver = true;
+                }
+            }
+
             moveIntervalTimer = 0;
             moveDistance += GameSetting.BaseMapMoveSpeed;
             Vector3 curPos = SquareRoot.localPosition;
@@ -692,15 +728,29 @@ public class PlayerBase
     {
         UpdateState();
         CheckRemove();
-        //MoveMap();
+        MoveMap();
     }
 
-    public bool CheckGameOver()
+    public bool IsGameOver()
     {
         return gameOver;
     }
 
+    public bool IsReachTop()
+    {
+        for (int c = 0; c < column; c++)
+        {
+            if (SquareMap[0, c] != null)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     #endregion
+
+
 }
 
 

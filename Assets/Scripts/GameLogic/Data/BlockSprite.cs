@@ -34,7 +34,9 @@ public class BlockSprite : MonoBehaviour
         SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
         string sprite = data.GetLength(0) + "-" + data.GetLength(1);
         sr.sortingLayerName = "Game";
-        sr.sortingOrder = 2;
+        sr.sortingOrder = 3;
+
+        //sr.material = Resources.Load<Material>("Materials/SpriteWithStencil");
 
         bs.Renderer = sr;
         bs.Renderer.sprite = Resources.Load<Sprite>(sprite);

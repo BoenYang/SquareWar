@@ -47,6 +47,7 @@ public class SquareSprite : MonoBehaviour
 
     private PlayerBase player;
 
+
     public static SquareSprite CreateSquare(int type, int r, int c)
     {
         GameObject go = new GameObject();
@@ -60,12 +61,17 @@ public class SquareSprite : MonoBehaviour
         }
 
         sr.sortingLayerName = "Game";
-        sr.sortingOrder = 2;
+        sr.sortingOrder = 3;
         sr.sprite = sprites[type - 1];
+
+        //sr.material = Resources.Load<Material>("Materials/SpriteWithStencil");
+
         ss.Column = c;
         ss.Row = r;
         ss.Type = type;
         ss.Renderer = sr;
+
+
         ss.State = SquareState.Static;
 
         collider.size = new Vector2(0.7f, 0.7f);

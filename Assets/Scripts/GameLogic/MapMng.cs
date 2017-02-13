@@ -108,7 +108,7 @@ public class MapMng : MonoBehaviour
         bool gameOver = false;
         for (int i = 0; i < Players.Count; i++)
         {
-            if (Players[i].CheckGameOver())
+            if (Players[i].IsGameOver())
             {
                 gameOver = true;
                 break;
@@ -137,7 +137,7 @@ public class MapMng : MonoBehaviour
 
         if (GUILayout.Button("测试左边加板", GUILayout.Width(100)))
         {
-            Players[0].InsertBlockAtTopLeft(new int[,] { { 4, 2, 3, 1 } },7);
+            Players[0].InsertBlockAtTopLeft(new int[,] { { 4, 2, 3, 1 ,4,2}, { 4, 2, 3, 1, 4, 2 } },7);
         }
 
         if (GUILayout.Button("测试右边加板", GUILayout.Width(100)))
