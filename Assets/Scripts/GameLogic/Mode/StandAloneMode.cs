@@ -19,12 +19,12 @@ public class StandAloneMode : GameModeBase
 
         player.OnChain += OnPlayerChain;
         player.OnGetScore += OnPlayerGetScore;
+        player.OnGameOver += GameOver;
 
         players = new List<PlayerBase>();
         players.Add(player);
 
-        DemoUI.Ins.Init(Mode);
-     
+        GameUI.Ins.Init(Mode);
         MapMng.Instance.SetPlayer(players);
         MapMng.Instance.InitMap(Mode);
     }
@@ -42,25 +42,34 @@ public class StandAloneMode : GameModeBase
     {
     }
 
-    public override void GameOver(GameResult result)
+    public override void GameOver()
     {
+        GameUI.Ins.ShowResultView(players);
+    }
+
+    public override void RestartGame()
+    {
+        GameScene.Instance.StopGame();
+        MapMng.Instance.ClearAllPlayer();
+        GameScene.Instance.StartGame();
+        GameUI.Ins.CloseResultView();
     }
 
     private void OnPlayerGetScore(int addScore)
     {
-        DemoUI.Ins.Player1Score.text = player.Name + ": " + player.Score;
+        GameUI.Ins.Player1Score.text = player.Name + ": " + player.Score;
     }
 
     private void OnPlayerChain(int chain)
     {
         if (chain > 1)
         {
-            DemoUI.Ins.Player1Chain.gameObject.SetActive(true);
-            DemoUI.Ins.Player1Chain.text = "连击+" + chain;
+            GameUI.Ins.Player1Chain.gameObject.SetActive(true);
+            GameUI.Ins.Player1Chain.text = "连击+" + chain;
         }
         else
         {
-            DemoUI.Ins.Player1Chain.gameObject.SetActive(false);
+            GameUI.Ins.Player1Chain.gameObject.SetActive(false);
         }
     }
 }

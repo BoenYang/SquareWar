@@ -22,16 +22,18 @@ public class PVEMode : GameModeBase
 
         player.OnGetScore += OnPlayerGetScore;
         player.OnChain += OnPlayerChain;
+        player.OnGameOver += GameOver;
 
         robotPlayer.OnGetScore += OnRobotGetScore;
         robotPlayer.OnChain += OnRobotChain;
+        robotPlayer.OnGameOver += GameOver;
 
         player.SetMapPos(new Vector3(1.09f,0.7f,0));
         robotPlayer.SetMapPos(new Vector3(10,0,0));
         players.Add(player);
         players.Add(robotPlayer);
 
-        DemoUI.Ins.Init(Mode);
+        GameUI.Ins.Init(Mode);
         MapMng.Instance.SetPlayer(players);
         MapMng.Instance.InitMap(Mode);
     }
@@ -49,13 +51,22 @@ public class PVEMode : GameModeBase
     {
     }
 
-    public override void GameOver(GameResult result)
+    public override void GameOver()
     {
+        GameUI.Ins.ShowResultView(players);
+    }
+
+    public override void RestartGame()
+    {
+        GameScene.Instance.StopGame();
+        MapMng.Instance.ClearAllPlayer();
+        GameScene.Instance.StartGame();
+        GameUI.Ins.CloseResultView();
     }
 
     private void OnPlayerGetScore(int addScore)
     {
-        DemoUI.Ins.Player1Score.text = player.Score.ToString();
+        GameUI.Ins.Player1Score.text = player.Score.ToString();
         Random.seed = DateTime.Now.Millisecond;
         AddBlock(robotPlayer, addScore);
     }
@@ -64,18 +75,18 @@ public class PVEMode : GameModeBase
     {
         if (chain > 1)
         {
-            DemoUI.Ins.Player1Chain.gameObject.SetActive(true);
-            DemoUI.Ins.Player1Chain.text = "连击+" + chain;
+            GameUI.Ins.Player1Chain.gameObject.SetActive(true);
+            GameUI.Ins.Player1Chain.text = "连击+" + chain;
         }
         else
         {
-            DemoUI.Ins.Player1Chain.gameObject.SetActive(false);
+            GameUI.Ins.Player1Chain.gameObject.SetActive(false);
         }
     }
 
     private void OnRobotGetScore(int addScore)
     {
-        DemoUI.Ins.Player2Score.text = robotPlayer.Score.ToString();
+        GameUI.Ins.Player2Score.text = robotPlayer.Score.ToString();
         Random.seed = DateTime.Now.Millisecond;
         AddBlock(player,addScore);
     }
@@ -93,12 +104,12 @@ public class PVEMode : GameModeBase
     {
         if (chain > 1)
         {
-            DemoUI.Ins.Player2Chain.gameObject.SetActive(true);
-            DemoUI.Ins.Player2Chain.text = "连击+" + chain;
+            GameUI.Ins.Player2Chain.gameObject.SetActive(true);
+            GameUI.Ins.Player2Chain.text = "连击+" + chain;
         }
         else
         {
-            DemoUI.Ins.Player2Chain.gameObject.SetActive(false);
+            GameUI.Ins.Player2Chain.gameObject.SetActive(false);
         }
     }
 
@@ -117,8 +128,6 @@ public class PVEMode : GameModeBase
             player.InsertBlockAtTopRight(blockData,1);
         }
     }
-
- 
 
     private List<int[,]> GetDropData(int score)
     {

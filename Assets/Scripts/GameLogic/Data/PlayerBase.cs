@@ -10,9 +10,13 @@ public class PlayerBase
 
     public delegate void ChainDelegate(int chainCount);
 
+    public delegate void GameOverDelegate();
+
     public event GetScoreDelegate OnGetScore = null;
 
     public event ChainDelegate OnChain = null;
+
+    public event GameOverDelegate OnGameOver = null;
 
     public string Name = "";
 
@@ -49,6 +53,8 @@ public class PlayerBase
 
     private Vector3 mapOffset = Vector3.zero;
 
+    private Vector3 initMapPos;
+
     private List<SquareSprite[]> squareWillInsert = new List<SquareSprite[]>();
 
     private List<RemoveData> removingData = new List<RemoveData>();
@@ -64,6 +70,15 @@ public class PlayerBase
         this.mapMng = mapMng;
 
         insertedRawCount = 0;
+        moveIntervalTimer = 0;
+        moveIntervalSubTimer = 0;
+        TotalGameTime = 0;
+        Score = 0;
+        chainCount = 1;
+        chainTimer = 0;
+        chainInterval = 0;
+
+        gameOver = false;
         currentMapMoveInterval = GameSetting.BaseMapMoveInterval;
 
         row = map.GetLength(0);
@@ -109,6 +124,8 @@ public class PlayerBase
                 rowBackground[c] = sr;
             }
         }
+
+        initMapPos = SquareRoot.transform.localPosition;
         OnChain(chainCount);
     }
 
@@ -189,7 +206,7 @@ public class PlayerBase
 
         if (IsReachTop())
         {
-            gameOver = true;
+            GameOver();
             return;
         }
 
@@ -280,7 +297,7 @@ public class PlayerBase
             {
                 if (SquareMap[r, c] != null)
                 {
-                    gameOver = true;
+                    GameOver();
                     return;
                 }
             }
@@ -311,7 +328,7 @@ public class PlayerBase
             {
                 if (SquareMap[r, c] != null)
                 {
-                    gameOver = true;
+                    GameOver();
                     return;
                 }
             }
@@ -727,6 +744,24 @@ public class PlayerBase
 
     private float moveDistance = 0;
 
+    protected virtual void UpdateState()
+    {
+        for (int r = 0; r < row; r++)
+        {
+            for (int c = 0; c < column; c++)
+            {
+                if (SquareMap[r, c] != null)
+                {
+                    SquareMap[r, c].UpdateState();
+                }
+            }
+        }
+        for (int i = 0; i < blocks.Count; i++)
+        {
+            blocks[i].UpdateState();
+        }
+    }
+
     protected virtual void MoveMap()
     {
         if (removingData.Count != 0)
@@ -747,11 +782,11 @@ public class PlayerBase
         if (moveIntervalTimer >= currentMapMoveInterval)
         {
 
-            if (moveDistance > GameSetting.SquareWidth)
+            if (moveDistance > GameSetting.SquareWidth / 2f)
             {
                 if (IsReachTop())
                 {
-                    gameOver = true;
+                    GameOver();
                 }
             }
 
@@ -764,24 +799,6 @@ public class PlayerBase
                 moveDistance = 0;
                 InsertRowAtBottom();
             }
-        }
-    }
-
-    protected virtual void UpdateState()
-    {
-        for (int r = 0; r < row; r++)
-        {
-            for (int c = 0; c < column; c++)
-            {
-                if (SquareMap[r, c] != null)
-                {
-                    SquareMap[r, c].UpdateState();
-                }
-            }
-        }
-        for (int i = 0; i < blocks.Count; i++)
-        {
-            blocks[i].UpdateState();
         }
     }
 
@@ -821,6 +838,14 @@ public class PlayerBase
         return startPos + new Vector3(c * GameSetting.SquareWidth, -r * GameSetting.SquareWidth, 0);
     }
 
+    private void GameOver()
+    {
+        gameOver = true;
+        if (OnGameOver != null)
+        {
+            OnGameOver();
+        }
+    }
 }
 
 

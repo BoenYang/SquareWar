@@ -26,7 +26,11 @@ public class PVPMode : GameModeBase
     {
     }
 
-    public override void GameOver(GameResult result)
+    public override void GameOver()
+    {
+    }
+
+    public override void RestartGame()
     {
     }
 }

@@ -32,7 +32,9 @@ public abstract class GameModeBase
 
     public abstract void GameResume();
 
-    public abstract void GameOver(GameResult result);
+    public abstract void GameOver();
+
+    public abstract void RestartGame();
 
     public static GameModeBase CreateGameMode(GameMode mode)
     {

@@ -80,6 +80,10 @@ public class RobotPlayer : PlayerBase
     public override void InitPlayerMap(MapMng mapMng, int[,] map)
     {
         base.InitPlayerMap(mapMng, map);
+
+        thinkIntervalTimer = 0;
+        operatorIntervalTimer = 0;
+
         columnSquareCount = new int[column];
         rowSquareCount = new int[row];
         rowTypeCount = new int[row,5];
@@ -457,7 +461,7 @@ public class RobotPlayer : PlayerBase
             for (int c = 0; c < column; c++)
             {
                 SquareSprite square = SquareMap[r, c];
-                if (square != null)
+                if (square != null && square.CanSwap())
                 {
                     //纵向方法
                     int down1Row = square.Row + 1;
@@ -474,7 +478,7 @@ public class RobotPlayer : PlayerBase
                     bool down2CanMove = false;
                     if (down1RowMatchSquare != null && down2RowMatchSquare != null)
                     {
-                        if (down1RowMatchSquare.Column != square.Column)
+                        if (down1RowMatchSquare.Column != square.Column && down1RowMatchSquare.CanSwap())
                         {
                             int targetColumn = square.Column + 1 * Math.Sign(down1RowMatchSquare.Column - square.Column);
                             int targetRow = down1RowMatchSquare.Row;
@@ -484,7 +488,7 @@ public class RobotPlayer : PlayerBase
                             }
                         }
 
-                        if (down2RowMatchSquare.Column != square.Column)
+                        if (down2RowMatchSquare.Column != square.Column && down1RowMatchSquare.CanSwap())
                         {
                             int targetColumn = square.Column + 1 * Math.Sign(down2RowMatchSquare.Column - square.Column);
                             int targetRow = down2RowMatchSquare.Row;

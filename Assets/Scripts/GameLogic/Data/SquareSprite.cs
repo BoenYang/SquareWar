@@ -83,6 +83,8 @@ public class SquareSprite : MonoBehaviour
         this.player = player;
     }
 
+  
+
     public void OnMouseDown()
     {
         if (Row < 0)
@@ -268,6 +270,10 @@ public class SquareSprite : MonoBehaviour
                             {
                                 Chain = under.Chain;
                             }
+                        }
+                        else
+                        {
+                            State = SquareState.Static;
                         }
                     }
                 }

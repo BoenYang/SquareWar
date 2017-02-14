@@ -76,31 +76,43 @@ public class MapMng : MonoBehaviour
         StartCoroutine(MapUpdate());
     }
 
+    public void ClearAllPlayer()
+    {
+        StopAllCoroutines();
+        Players = null;
+
+        for (int i = transform.childCount - 1;i >= 0; i--)
+        {
+            Destroy(transform.GetChild(i).gameObject);
+        }
+    }
+
     private IEnumerator MapUpdate()
     {
         while (true)
         {
-            if (IsGameOver())
+            if (Players != null)
             {
-                yield break;
-            }
+                if (IsGameOver())
+                {
+                    yield break;
+                }
 
-            if (NeedAddNewRow())
-            {
-                int[] willInsertRaw = RandomGenerateRaw();
+                if (NeedAddNewRow())
+                {
+                    int[] willInsertRaw = RandomGenerateRaw();
+                    for (int i = 0; i < Players.Count; i++)
+                    {
+                        Players[i].AddWillInsertRaw(willInsertRaw);
+                    }
+                }
+
                 for (int i = 0; i < Players.Count; i++)
                 {
-                    Players[i].AddWillInsertRaw(willInsertRaw);
+                    Players[i].PlayerUpdate();
                 }
             }
-
-            for (int i = 0; i < Players.Count; i++)
-            {
-                Players[i].PlayerUpdate();
-            }
-
             yield return new WaitForEndOfFrame();
-
         }
     }
 

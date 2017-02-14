@@ -1,8 +1,12 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.UI;
 
-public class DemoUI : MonoBehaviour
+public class GameUI : MonoBehaviour
 {
+
+    public static GameUI Ins;
+
     public Text Player1Score;
 
     public Text Player2Score;
@@ -19,14 +23,15 @@ public class DemoUI : MonoBehaviour
 
     public GameObject Player2ScoreContainer;
 
-    public static DemoUI Ins;
+    public GameObject ResultView;
+
+    public Text ResultText;
 
     private Vector3 player1ViewInitPos;
 
     void Awake()
     {
         Ins = this;
-
         player1ViewInitPos = Player1View.transform.localPosition;
     }
 
@@ -64,4 +69,42 @@ public class DemoUI : MonoBehaviour
         }
     }
 
+    public void OnBackClick()
+    {
+        GameScene.Instance.StopGame();
+        MapMng.Instance.ClearAllPlayer();
+        UIController.Ins.ShowMainUI();
+    }
+
+    public void OnRestartGameClick()
+    {
+        GameScene.Instance.Game.RestartGame();
+    }
+
+    public void ShowResultView(List<PlayerBase> players)
+    {
+        ResultView.SetActive(true);
+
+        if (GameScene.Instance.Mode == GameMode.PVE)
+        {
+            PlayerBase winner = players.Find((p) => !p.IsGameOver());
+
+            if (winner.IsRobot)
+            {
+                ResultText.text = "方块到顶了，您输了!";
+            }
+            else
+            {
+                ResultText.text = "恭喜您获得胜利^_^";
+            }
+        }else if (GameScene.Instance.Mode == GameMode.StandAlone)
+        {
+            ResultText.text = "方块到顶了，您输了!";
+        }
+    }
+
+    public void CloseResultView()
+    {
+        ResultView.SetActive(false);
+    }
 }

@@ -6,15 +6,25 @@ public class GameScene : MonoBehaviour
 
     public GameMode Mode = GameMode.StandAlone;
 
-    private GameModeBase gameMode;
+    public GameModeBase Game;
 
     public static GameScene Instance;
 
-    void Start()
+    void Awake()
     {
         Instance = this;
-        gameMode = GameModeBase.CreateGameMode(Mode);
-        gameMode.Init();
-        StartCoroutine(gameMode.GameLoop());
+    }
+
+    public void StartGame()
+    {
+        Instance = this;
+        Game = GameModeBase.CreateGameMode(Mode);
+        Game.Init();
+        StartCoroutine(Game.GameLoop());
+    }
+
+    public void StopGame()
+    {
+        StopAllCoroutines();
     }
 }
