@@ -695,7 +695,7 @@ public class PlayerBase
     private IEnumerator RemoveCorutine(RemoveData removeData)
     {
         //在协程中一个一个移除
-        yield return new WaitForSeconds(GameSetting.SquareRemoveInterval);
+        yield return new WaitForSeconds(GameSetting.RemoveSquareDelay);
         for (int i = 0; i < removeData.RemoveList.Count; i++)
         {
             SquareSprite squareNeedRemove = removeData.RemoveList[i];

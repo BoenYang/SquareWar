@@ -126,6 +126,7 @@ public class SquareSprite : MonoBehaviour
     public void MarkWillRemove()
     {
         State = SquareState.Clear;
+        transform.DOScale(Vector3.one, 0.2f).SetLoops(2, LoopType.Yoyo);
     }
 
     public void Remove()
@@ -260,10 +261,13 @@ public class SquareSprite : MonoBehaviour
                     }
                     else
                     {
-                        State = under.State;
-                        if (under.Chain)
+                        if (under.State != SquareState.Hide)
                         {
-                            Chain = under.Chain;
+                            State = under.State;
+                            if (under.Chain)
+                            {
+                                Chain = under.Chain;
+                            }
                         }
                     }
                 }
