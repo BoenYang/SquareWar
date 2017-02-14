@@ -89,6 +89,19 @@ public class PVEMode : GameModeBase
         }
     }
 
+    private void OnRobotChain(int chain)
+    {
+        if (chain > 1)
+        {
+            DemoUI.Ins.Player2Chain.gameObject.SetActive(true);
+            DemoUI.Ins.Player2Chain.text = "连击+" + chain;
+        }
+        else
+        {
+            DemoUI.Ins.Player2Chain.gameObject.SetActive(false);
+        }
+    }
+
     private IEnumerator AddBlockDelay(int delay,PlayerBase player,int[,] blockData)
     {
         yield return new WaitForSeconds(delay);
@@ -105,18 +118,7 @@ public class PVEMode : GameModeBase
         }
     }
 
-    private void OnRobotChain(int chain)
-    {
-        if (chain > 1)
-        {
-            DemoUI.Ins.Player2Chain.gameObject.SetActive(true);
-            DemoUI.Ins.Player2Chain.text = "连击+" + chain;
-        }
-        else
-        {
-            DemoUI.Ins.Player2Chain.gameObject.SetActive(false);
-        }
-    }
+ 
 
     private List<int[,]> GetDropData(int score)
     {

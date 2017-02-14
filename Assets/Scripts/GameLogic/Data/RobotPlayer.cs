@@ -6,7 +6,7 @@ public class RobotPlayer : PlayerBase
 {
     private SquareData[,] clonedMap;
 
-    private List<AICommand> commandList = new List<AICommand>();
+    public List<AICommand> commandList = new List<AICommand>();
 
     private float thinkIntervalTimer = 0 ;
 
@@ -24,6 +24,7 @@ public class RobotPlayer : PlayerBase
 
     private PlayerBase humanPlayer;
 
+    [System.Serializable]
     public class AICommand
     {
         public SquareSprite SwapSquare;
@@ -73,6 +74,7 @@ public class RobotPlayer : PlayerBase
     {
         isRobot = true;
         Name = "RobotPlayer";
+
     }
 
     public override void InitPlayerMap(MapMng mapMng, int[,] map)
@@ -644,7 +646,7 @@ public class RobotPlayer : PlayerBase
             for (int c = 0; c < column; c++)
             {
                 SquareSprite square = SquareMap[r, c];
-                if (square != null)
+                if (square != null && square.CanSwap())
                 {
                     int rowCount = rowSquareCount[r];
                     if (rowCount < 4)

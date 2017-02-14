@@ -269,9 +269,23 @@ public class PlayerBase
 
     public void InsertBlockAtTopLeft(int[,] data,int type)
     {
+
         int insertRaw = data.GetLength(0) - 1;
         int insertColumn = 0;
         int dataColumnCount = data.GetLength(1);
+
+        for (int c = 0; c < dataColumnCount; c++)
+        {
+            for (int r = 0; r <= insertRaw; r++)
+            {
+                if (SquareMap[r, c] != null)
+                {
+                    gameOver = true;
+                    return;
+                }
+            }
+        }
+
         Vector3 pos = GetPos(insertRaw + insertedRawCount, insertColumn) + new Vector3( (dataColumnCount - 1) * GameSetting.SquareWidth/2f, insertRaw * GameSetting.SquareWidth/2f,0);
         BlockSprite bs = BlockSprite.CreateBlockSprite(insertRaw, insertColumn, type, data);
         bs.transform.SetParent(SquareRoot);
@@ -286,9 +300,23 @@ public class PlayerBase
 
     public void InsertBlockAtTopRight(int[,] data,int type)
     {
+
         int insertRaw = data.GetLength(0) - 1;
         int insertColumn = SquareMap.GetLength(1) - data.GetLength(1);
         int dataColumnCount = data.GetLength(1);
+
+        for (int c = insertColumn; c < column; c++)
+        {
+            for (int r = 0; r <= insertRaw; r++)
+            {
+                if (SquareMap[r, c] != null)
+                {
+                    gameOver = true;
+                    return;
+                }
+            }
+        }
+
         Vector3 pos = GetPos(insertRaw  + insertedRawCount, insertColumn) + new Vector3((dataColumnCount - 1) * GameSetting.SquareWidth / 2f, insertRaw * GameSetting.SquareWidth / 2f, 0);
         BlockSprite bs = BlockSprite.CreateBlockSprite(insertRaw, insertColumn, type, data);
         bs.transform.SetParent(SquareRoot);
