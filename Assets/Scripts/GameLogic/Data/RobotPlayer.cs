@@ -86,7 +86,7 @@ public class RobotPlayer : PlayerBase
 
         columnSquareCount = new int[column];
         rowSquareCount = new int[row];
-        rowTypeCount = new int[row,5];
+        rowTypeCount = new int[row,GameSetting.SquareTypeCount];
         clonedMap = new SquareData[row, column];
     }
 

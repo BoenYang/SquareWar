@@ -144,18 +144,4 @@ public class MapMng : MonoBehaviour
         return need;
     }
 
-    void OnGUI()
-    {
-        GUILayout.Space(20);
-
-        if (GUILayout.Button("测试左边加板", GUILayout.Width(100)))
-        {
-            Players[0].InsertBlockAtTopLeft(new int[,] { { 4, 2, 3, 1 ,4,2}, { 4, 2, 3, 1, 4, 2 } },7);
-        }
-
-        if (GUILayout.Button("测试右边加板", GUILayout.Width(100)))
-        {
-            Players[0].InsertBlockAtTopRight(new int[,] { { 1, 2, 3, 4 } }, 7);
-        }
-    }
 }
