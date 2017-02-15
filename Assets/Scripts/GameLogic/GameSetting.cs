@@ -26,4 +26,6 @@ public static class GameSetting
 
     public static readonly float RemoveSquareDelay = 0.5f;
 
+    public static readonly int SquareTypeCount = 6;
+
 }

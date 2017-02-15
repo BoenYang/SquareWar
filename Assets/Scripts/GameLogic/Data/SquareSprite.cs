@@ -1,4 +1,5 @@
-﻿using DG.Tweening;
+﻿using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 
 public class SquareSprite : MonoBehaviour
@@ -24,6 +25,16 @@ public class SquareSprite : MonoBehaviour
     public BlockSprite Block;
 
     public SpriteRenderer Renderer;
+    
+    private static Dictionary<int,string> effectDict = new Dictionary<int, string>()
+    {
+        { 1,"blue_effect"},
+        { 2,"brown_effect"},
+        { 3,"green_effect"},
+        { 4,"orange_effect"},
+        { 5,"pink_effect"},
+        { 6,"yellow_effect"},
+    }; 
 
     private bool IsBottom()
     {
@@ -147,6 +158,11 @@ public class SquareSprite : MonoBehaviour
 
     public void ShowRemoveEffect()
     {
+        GameObject effectObj = Resources.Load<GameObject>("Effect/" + effectDict[Type]);
+
+        GameObject effect = Instantiate(effectObj, gameObject.transform.position, Quaternion.identity) as GameObject;
+
+        Destroy(effect,1.0f);
         gameObject.SetActive(false);
         isAnimating = true;
     }

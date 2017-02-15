@@ -1,14 +1,15 @@
 fileFormatVersion: 2
 guid: ae69452d757c05c4bbc9af7f6afc028f
-timeCreated: 1484289552
+timeCreated: 1487127855
 licenseType: Pro
 TextureImporter:
   fileIDToRecycleName:
     21300000: green
     21300002: blue
     21300004: yellow
-    21300006: red
-    21300008: orgrian
+    21300006: brown
+    21300008: orange
+    21300010: pink
   serializedVersion: 2
   mipmaps:
     mipMapMode: 0
@@ -93,11 +94,11 @@ TextureImporter:
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
     - serializedVersion: 2
-      name: red
+      name: brown
       rect:
         serializedVersion: 2
-        x: 250
-        y: 164
+        x: 247
+        y: 84
         width: 74
         height: 74
       alignment: 0
@@ -105,11 +106,23 @@ TextureImporter:
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
     - serializedVersion: 2
-      name: orgrian
+      name: orange
       rect:
         serializedVersion: 2
         x: 406
-        y: 844
+        y: 843
+        width: 74
+        height: 74
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: pink
+      rect:
+        serializedVersion: 2
+        x: 249
+        y: 164
         width: 74
         height: 74
       alignment: 0

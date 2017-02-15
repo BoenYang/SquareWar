@@ -39,8 +39,8 @@ public class MapMng : MonoBehaviour
             { 0,2,0,0,0,0},
             { 0,1,0,2,0,3},
             { 0,1,0,1,4,2},
-            { 1,2,1,1,5,1},
-            { 5,3,2,3,1,2},
+            { 1,2,1,6,5,1},
+            { 5,6,2,3,6,2},
             { 1,2,3,4,5,3},
         };
         return mapData;
@@ -51,7 +51,7 @@ public class MapMng : MonoBehaviour
         int[] willInsertRaw = new int[GameSetting.ColumnCount];
         for (int i = 0; i < GameSetting.ColumnCount; i++)
         {
-            int type = Random.Range(1, 6);
+            int type = Random.Range(1, GameSetting.SquareTypeCount);
             willInsertRaw[i] = type;
         }
         return willInsertRaw;
