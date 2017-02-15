@@ -28,12 +28,13 @@ public class SquareSprite : MonoBehaviour
     
     private static Dictionary<int,string> effectDict = new Dictionary<int, string>()
     {
-        { 1,"blue_effect"},
-        { 2,"brown_effect"},
-        { 3,"green_effect"},
-        { 4,"orange_effect"},
-        { 5,"pink_effect"},
-        { 6,"yellow_effect"},
+        { 1,"green_effect"},
+        { 2,"purple_effect"},
+        { 3,"orange_effect"},
+        { 4,"yellow_effect"},
+        { 5,"blue_effect"},
+        { 6,"red_effect"},
+        { 7,"brown_effect"},
     }; 
 
     private bool IsBottom()
@@ -66,14 +67,10 @@ public class SquareSprite : MonoBehaviour
         SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
         BoxCollider2D collider = go.AddComponent<BoxCollider2D>();
 
-        if (sprites == null)
-        {
-            sprites = Resources.LoadAll<Sprite>("tiles_foreground");
-        }
 
         sr.sortingLayerName = "Game";
         sr.sortingOrder = 3;
-        sr.sprite = sprites[type - 1];
+        sr.sprite = Resources.Load<Sprite>("sg" + type);
 
         sr.material = Resources.Load<Material>("Materials/SpriteWithStencil");
 
@@ -86,6 +83,7 @@ public class SquareSprite : MonoBehaviour
         collider.size = new Vector2(0.7f, 0.7f);
 
         go.transform.localScale = Vector3.one*0.8f;
+
         return ss;
     }
 
@@ -199,7 +197,7 @@ public class SquareSprite : MonoBehaviour
         }
     }
 
-    public void Fall()
+    private void Fall()
     {
         isAnimating = true;
         player.SquareMap[Row + 1, Column] = this;
@@ -212,13 +210,18 @@ public class SquareSprite : MonoBehaviour
         });
     }
 
-    public void Hung()
+    private void Hung()
     {
         isAnimating = true;
         transform.DOScale(transform.localScale, GameSetting.SquareHungTime).OnComplete(() =>
         {
             isAnimating = false;
         });
+    }
+
+    private void Landing()
+    {
+        //transform.DOScaleY(transform.localScale.x*0.6f, 0.1f).SetLoops(2, LoopType.Yoyo);
     }
 
     public void UpdateState()
@@ -265,6 +268,7 @@ public class SquareSprite : MonoBehaviour
                 {
                     State = SquareState.Static;
                     Chain = false;
+                    Landing();
                 }
                 else
                 {
@@ -286,9 +290,14 @@ public class SquareSprite : MonoBehaviour
                             {
                                 Chain = under.Chain;
                             }
+                            if (State == SquareState.Static)
+                            {
+                                Landing();
+                            }
                         }
                         else
                         {
+                          
                             State = SquareState.Static;
                         }
                     }
