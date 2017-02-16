@@ -107,4 +107,14 @@ public class GameUI : MonoBehaviour
     {
         ResultView.SetActive(false);
     }
+
+    public void OnAddSpeedDown() {
+        GameScene.Instance.Game.LocalPlayer.StartAddSpeed();
+    }
+
+    public void OnAddSpeedUp()
+    {
+        GameScene.Instance.Game.LocalPlayer.StopAddSpeed();
+    }
+
 }

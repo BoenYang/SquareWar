@@ -3,8 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [System.Serializable]
-public class PlayerBase
+public class PlayerBase : MonoBehaviour
 {
+
+    public enum PlayerType
+    {
+        Normal  = 1,
+        Robot   = 2,
+        PVP     = 3        
+    }
 
     public delegate void GetScoreDelegate(int addScore);
 
@@ -12,71 +19,109 @@ public class PlayerBase
 
     public delegate void GameOverDelegate();
 
+    //得分事件回调
     public event GetScoreDelegate OnGetScore = null;
 
+    //连消事件回调
     public event ChainDelegate OnChain = null;
 
+    //游戏结束事件回调
     public event GameOverDelegate OnGameOver = null;
 
+    //玩家名称
     public string Name = "";
 
+    //分数
     public int Score = 0;
 
+    //方块地图容器
     public SquareSprite[,] SquareMap = null;
 
+    //游戏总时间
     public float TotalGameTime = 0;
 
+    //方块更节点
     [System.NonSerialized]
     public Transform SquareRoot;
 
+    //是否是机器人判断
     public bool IsRobot { get { return isRobot; } }
 
     protected bool isRobot = false;
 
+    //缓存行数目，简化代码
     protected int row;
 
+    //缓存列数目，简化代码
     protected int column;
 
+    //已经插入的行数量，插入之后会导致位置的坐标计算不正确，正确计算应该是 insertedRawcout + 当前行
     private int insertedRawCount = 0;
 
+    //移动间隔计时器
     private float moveIntervalTimer;
 
+    //当前地图移动间隔
     public float currentMapMoveInterval;
 
+    //移动间隔减少计时器 大于 GameSetting.SpeedAddInterval 时 currentMapMoveInterval = currentMapMoveInterval -  GameSetting.MoveIntervalSubStep
     private float moveIntervalSubTimer;
 
+    //是否游戏结束
     private bool gameOver = false;
 
-    private MapMng mapMng;
-
+    //0行0列的方块位置
     private Vector3 startPos;
 
+    //地图偏移
     private Vector3 mapOffset = Vector3.zero;
 
+    //底部待插入的方块行
     private List<SquareSprite[]> squareWillInsert = new List<SquareSprite[]>();
 
+    //正在移除的方块数据
     private List<RemoveData> removingDataList = new List<RemoveData>();
 
+    //障碍方块容器
     private List<BlockSprite> blocks = new List<BlockSprite>(); 
 
+    //背景容器，用于保存背景指针，便于在插入时移除第0行，插入最后一行
     private List<SpriteRenderer[]> backgroundMap = new List<SpriteRenderer[]>();
 
-    private List<SpriteRenderer> backgroundCache = new List<SpriteRenderer>(); 
+    //移除的背景的SpriteRenderer缓存，用于减少背景GameObject创建次数
+    private List<SpriteRenderer> backgroundCache = new List<SpriteRenderer>();
 
-    public virtual void InitPlayerMap(MapMng mapMng, int[,] map)
+
+    public static PlayerBase CreatePlayer(PlayerType playerType,Transform root)
     {
-        this.mapMng = mapMng;
+        GameObject playerGo = new GameObject(playerType.ToString());
 
-        insertedRawCount = 0;
-        moveIntervalTimer = 0;
-        moveIntervalSubTimer = 0;
-        TotalGameTime = 0;
-        Score = 0;
-        chainCount = 1;
-        chainTimer = 0;
-        chainInterval = 0;
+        PlayerBase player = null;
 
-        gameOver = false;
+        switch (playerType)
+        {
+            case PlayerType.Normal:
+                player = playerGo.AddComponent<NormalPlayer>();
+                break;
+            case PlayerType.Robot:
+                player = playerGo.AddComponent<RobotPlayer>();
+                break;
+            case PlayerType.PVP:
+                player = playerGo.AddComponent<PVPPlayer>();
+                break;
+        }
+
+        playerGo.transform.SetParent(root);
+        playerGo.transform.localPosition = Vector3.zero;
+        playerGo.transform.localScale = Vector3.one;
+        playerGo.layer = root.gameObject.layer;
+
+        return player;
+    }
+
+    //初始化
+    public virtual void InitPlayerMap(int[,] map)
+    {
         currentMapMoveInterval = GameSetting.BaseMapMoveInterval;
 
         row = map.GetLength(0);
@@ -86,14 +131,9 @@ public class PlayerBase
         SquareMap = new SquareSprite[row, column];
         backgroundMap = new List<SpriteRenderer[]>();
 
-        GameObject player =  new GameObject();
-        player.name = Name;
-        player.transform.SetParent(mapMng.transform);
-        player.transform.localPosition = mapOffset;
-        player.transform.localScale = Vector3.one;
-        player.gameObject.layer = mapMng.gameObject.layer;
+        SquareRoot = transform;
 
-        SquareRoot = player.transform;
+        transform.localPosition = mapOffset;
 
         for (int r = 0; r < row; r++)
         {
@@ -126,13 +166,14 @@ public class PlayerBase
         OnChain(chainCount);
     }
 
+    //初始化地图遮罩
     public void InitMapMask()
     {
         Sprite sprite = Resources.Load<Sprite>("fk1");
 
         GameObject mask = new GameObject(Name + "MapMask");
-        mask.gameObject.layer = mapMng.gameObject.layer;
-        mask.transform.SetParent(mapMng.transform);
+        mask.gameObject.layer = gameObject.layer;
+        mask.transform.SetParent(transform.parent);
         mask.transform.localPosition = mapOffset;
 
         SpriteRenderer sr = mask.AddComponent<SpriteRenderer>();
@@ -144,6 +185,7 @@ public class PlayerBase
         float mapWidth = GameSetting.SquareWidth * column * 100;
         float mapHeight = GameSetting.SquareWidth * row * 100;
 
+        //计算遮罩的Sprite 缩放宽，高
         float xScale = mapWidth / sprite.rect.size.x;
         float yScale = mapHeight / sprite.rect.size.y;
 
@@ -152,11 +194,17 @@ public class PlayerBase
 
     #region 插入行算法
 
+    //是否需要插入行
     public bool NeedAddNewRaw()
     {
         return squareWillInsert.Count == 0;
     }
 
+    /// <summary>
+    /// 在指定行处插入行
+    /// </summary>
+    /// <param name="insertRowIndex">插入位置索引</param>
+    /// <param name="squareData">插入方块指针</param>
     public void InsertRowAtIndex(int insertRowIndex,SquareSprite[] squareData)
     {
         //从第1行开始往上移动
@@ -172,9 +220,9 @@ public class PlayerBase
             }
         }
 
+        //移除第9行背景加入到缓存
         SpriteRenderer[] removeBackground = backgroundMap[0];
         backgroundMap.RemoveAt(0);
-
         for (int i = 0; i < removeBackground.Length; i++)
         {
             removeBackground[i].gameObject.SetActive(false);
@@ -194,22 +242,27 @@ public class PlayerBase
         }
     }
 
+    //在底部插入行
     public void InsertRowAtBottom()
     {
+        //检查是否有待插入行
         if (squareWillInsert.Count == 0)
         {
             return;
         }
 
+        //检查是否到顶，到顶插入则游戏结束
         if (IsReachTop())
         {
             GameOver();
             return;
         }
 
+        
         insertedRawCount++;
         InsertRowAtIndex(row - 1,squareWillInsert[0]);
 
+        //插入行之后障碍方块向上移动，行号-1
         for (int i = 0; i < blocks.Count; i++)
         {
             blocks[i].Raw--;
@@ -218,6 +271,7 @@ public class PlayerBase
         squareWillInsert.RemoveAt(0);
     }
 
+    //增加待插入行
     public void AddWillInsertRaw(int[] insertRawData)
     {
         if (insertRawData == null || insertRawData.Length != SquareMap.GetLength(1))
@@ -248,6 +302,7 @@ public class PlayerBase
         squareWillInsert.Add(insertRawSquare);
     }
 
+    //创建方块背景
     private SpriteRenderer CreateBackground(int r,int c)
     {
         Sprite bg = Resources.Load<Sprite>("fk" + (((r + c) % 2) + 1));
@@ -281,6 +336,11 @@ public class PlayerBase
         return sr;
     }
 
+    /// <summary>
+    /// 在左上方插入障碍方块
+    /// </summary>
+    /// <param name="data">方块类型数组</param>
+    /// <param name="type">障碍方块类型</param>
     public void InsertBlockAtTopLeft(int[,] data,int type)
     {
 
@@ -312,6 +372,12 @@ public class PlayerBase
         blocks.Add(bs);
     }
 
+
+    /// <summary>
+    /// 在右上方插入障碍方块
+    /// </summary>
+    /// <param name="data">方块类型数组</param>
+    /// <param name="type">障碍方块类型</param>
     public void InsertBlockAtTopRight(int[,] data,int type)
     {
 
@@ -343,6 +409,10 @@ public class PlayerBase
         blocks.Add(bs);
     }
 
+    /// <summary>
+    /// 移除方块
+    /// </summary>
+    /// <param name="block"></param>
     public void RemoveBlock(BlockSprite block)
     {
         blocks.Remove(block);
@@ -417,12 +487,16 @@ public class PlayerBase
 
     #region 消除核心算法
 
+    //当前帧移除的方块列表，用于计算分数
     private List<SquareSprite> removingSquareList = new List<SquareSprite>();
 
+    //连消数
     private int chainCount = 1;
 
+    //连消计时器
     private float chainTimer;
 
+    //连消间隔
     private float chainInterval;
 
     private void CheckRemove()
@@ -435,6 +509,9 @@ public class PlayerBase
         UpdateChainTimer();
     }
 
+    /// <summary>
+    /// 消除核心算法
+    /// </summary>
     private void CheckRemove2()
     {
         removingSquareList.Clear();
@@ -486,6 +563,7 @@ public class PlayerBase
         UpdateChainTimer();
     }
 
+    //更新连消计时器
     private void UpdateChainTimer()
     {
         if (chainCount > 1)
@@ -503,6 +581,7 @@ public class PlayerBase
         }
     }
 
+    //计算分数
     private void CalculateScore()
     {
         if (removingSquareList.Count > 0)
@@ -521,6 +600,7 @@ public class PlayerBase
        
     }
 
+    //检查横向消除
     private void CheckHorizontalRemove()
     {
         //检测水平方向消除
@@ -587,6 +667,7 @@ public class PlayerBase
         }
     }
 
+    //检查纵向消除
     private void CheckVerticalRemove()
     {
         //检测垂直方向消除
@@ -648,6 +729,7 @@ public class PlayerBase
         }
     }
 
+    //移除与消除方块相连接的障碍方块
     private void RemoveConnectedBlock(RemoveData removeData)
     {
         for (int i = 0; i < removeData.Count; i++)
@@ -657,6 +739,7 @@ public class PlayerBase
             SquareSprite above = null;
             SquareSprite under = null;
             SquareSprite squareNeedRemove = null;
+
             if (removeData.Dir == RemoveDir.Horizontal)
             {
                 squareNeedRemove = SquareMap[removeData.StartRow, removeData.StartColumn + i];
@@ -666,6 +749,7 @@ public class PlayerBase
                 squareNeedRemove = SquareMap[removeData.StartRow + i, removeData.StartColumn];
             }
 
+            //获取上下左右的方块
             if (squareNeedRemove != null)
             {
                 if (squareNeedRemove.Column > 0)
@@ -696,11 +780,18 @@ public class PlayerBase
         }
     }
 
+    /// <summary>
+    /// 检查方块是否是在障碍方块之中
+    /// </summary>
+    /// <param name="squareInBlock">检查的方块</param>
     private void RemoveBlock(SquareSprite squareInBlock)
     {
-        if (squareInBlock != null && squareInBlock.State == SquareState.Hide && squareInBlock.Block != null &&
+        if (squareInBlock != null && 
+            squareInBlock.State == SquareState.Hide && 
+            squareInBlock.Block != null &&  
             !squareInBlock.Block.IsAnimating)
         {
+            //障碍方块消除一行
             squareInBlock.Block.RemoveLine();
         }
     }
@@ -713,9 +804,15 @@ public class PlayerBase
         removeData.ConvertToList(SquareMap);
         //标记方块为移除，避免重复检测
         MarkWillRemove(removeData);
-        mapMng.StartCoroutine(RemoveCorutine(removeData));
+
+        //移除方块协程
+        StartCoroutine(RemoveCorutine(removeData));
     }
 
+    /// <summary>
+    /// 设置要移除的方块状态为clear
+    /// </summary>
+    /// <param name="removeData"></param>
     private void MarkWillRemove(RemoveData removeData)
     {
         bool chain = false;
@@ -732,26 +829,6 @@ public class PlayerBase
             {
                 removingSquareList.Add(squareNeedRemove);
             }
-//
-//            //移除方向为横向
-//            if (removeData.Dir == RemoveDir.Horizontal)
-//            {
-//                //标记横向移除，如果没有被纵向移除过（表示已经加入过移除列表），则加入移除列表
-//                squareNeedRemove.HorizontalRemoved = true;
-//                if (!squareNeedRemove.VerticalRemoved)
-//                {
-//                    removingSquareList.Add(squareNeedRemove);
-//                }
-//            }
-//            else   //移除方向为纵向
-//            {
-//                //标记纵向移除，如果没有被横向移除过（表示已经加入过移除列表），则加入移除列表
-//                squareNeedRemove.VerticalRemoved = true;
-//                if (!squareNeedRemove.HorizontalRemoved)
-//                {
-//                    removingSquareList.Add(squareNeedRemove);
-//                }
-//            }
         }
 
         //计算连消
@@ -767,10 +844,13 @@ public class PlayerBase
         }
     }
 
+    //移除协程
     private IEnumerator RemoveCorutine(RemoveData removeData)
     {
         //在协程中一个一个移除
         yield return new WaitForSeconds(GameSetting.RemoveSquareDelay);
+
+        //播放移除方块特效
         for (int i = 0; i < removeData.RemoveList.Count; i++)
         {
             SquareSprite squareNeedRemove = removeData.RemoveList[i];
@@ -778,9 +858,12 @@ public class PlayerBase
             {
                 squareNeedRemove.ShowRemoveEffect();
             }
-            yield return new WaitForSeconds(GameSetting.SquareRemoveInterval);
+            //yield return new WaitForSeconds(GameSetting.SquareRemoveInterval);
         }
 
+        yield return new WaitForSeconds(GameSetting.SquareRemoveInterval);
+
+        //销毁移除的方块，并在地图上将对应位置置空
         for (int i = 0; i < removeData.RemoveList.Count; i++)
         {
             SquareSprite squareNeedRemove = removeData.RemoveList[i];
@@ -796,8 +879,12 @@ public class PlayerBase
         removingDataList.Remove(removeData);
     }
 
+    /// <summary>
+    /// 统一每个方块的下方和右方有多少个相连接的类型同的方块，用于消除算法，包括其自身
+    /// </summary>
     private void UpdateSquareStatistic()
     {
+        //从下到上，从右到做遍历
         for (int r = row - 1; r >= 0; r--)
         {
             for (int c = column - 1; c >= 0; c--)
@@ -805,11 +892,12 @@ public class PlayerBase
                 SquareSprite square = SquareMap[r, c];
                 if (square != null)
                 {
-                    if (square.CanSwap())
+                    if (square.CanSwap())   //可交换
                     {
-                        if (r < row - 1)
+                        if (r < row - 1) 
                         {
                             SquareSprite under = SquareMap[r + 1, c];
+                            //类型相等且可交换
                             if (under != null && square.Type == under.Type && under.CanSwap())
                             {
                                 square.UnderSameTypeSquareCount = under.UnderSameTypeSquareCount + 1;
@@ -819,7 +907,7 @@ public class PlayerBase
                                 square.UnderSameTypeSquareCount = 1;
                             }
                         }
-                        else
+                        else //最下方的方块，相同数目方块始终为1
                         {
                             square.UnderSameTypeSquareCount = 1;
                         }
@@ -827,6 +915,7 @@ public class PlayerBase
                         if (c < column - 1)
                         {
                             SquareSprite right = SquareMap[r, c + 1];
+                            //类型相等且可交换
                             if (right != null && square.Type == right.Type && right.CanSwap())
                             {
                                 square.RightSameTypeSquareCount = right.RightSameTypeSquareCount + 1;
@@ -836,12 +925,12 @@ public class PlayerBase
                                 square.RightSameTypeSquareCount = 1;
                             }
                         }
-                        else
+                        else  //最右方的方块，相同数目方块始终为1
                         {
                             square.RightSameTypeSquareCount = 1;
                         }
                     }
-                    else
+                    else //不可交换则全置1
                     {
                         square.RightSameTypeSquareCount = 1;
                         square.UnderSameTypeSquareCount = 1;
@@ -856,8 +945,12 @@ public class PlayerBase
 
     #region Update更新逻辑
 
+    //移动的距离
     private float moveDistance = 0;
 
+    private float currentMoveIntervalRecord;
+
+    //更新所有方块和障碍方块的状态
     protected virtual void UpdateState()
     {
         for (int r = row - 1; r >= 0; r--)
@@ -876,6 +969,7 @@ public class PlayerBase
         }
     }
 
+    //地图移动
     protected virtual void MoveMap()
     {
         if (removingDataList.Count != 0)
@@ -887,27 +981,33 @@ public class PlayerBase
         moveIntervalTimer += Time.deltaTime;
         moveIntervalSubTimer += Time.deltaTime;
 
+        //游戏时间到达加速间隔时间，移动间隔减少进行加速
         if (moveIntervalSubTimer > GameSetting.SpeedAddInterval)
         {
             moveIntervalSubTimer = 0;
-            currentMapMoveInterval -= GameSetting.MoveIntervalSubStep;
+            //速度封顶
+            if (currentMapMoveInterval - GameSetting.MoveIntervalSubStep > GameSetting.MinSquareMoveInterval)
+            {
+                currentMapMoveInterval -= GameSetting.MoveIntervalSubStep;
+            }
         }
 
+        //每隔一段时间移动一次
         if (moveIntervalTimer >= currentMapMoveInterval)
         {
-
-            if (moveDistance > GameSetting.SquareWidth / 2f)
+            //方块到顶且超过大于2分之一个方块个时候结束
+            if (IsReachTop() && moveDistance > GameSetting.SquareWidth / 2f)
             {
-                if (IsReachTop())
-                {
-                    GameOver();
-                }
+                GameOver();
             }
+
 
             moveIntervalTimer = 0;
             moveDistance += GameSetting.BaseMapMoveSpeed;
             Vector3 curPos = SquareRoot.localPosition;
             SquareRoot.localPosition = curPos + new Vector3(0, GameSetting.BaseMapMoveSpeed, 0);
+
+            //每移动一个方块距离后增加一行
             if (Mathf.Abs(moveDistance - GameSetting.SquareWidth) <= 0.000001f)
             {
                 moveDistance = 0;
@@ -916,6 +1016,7 @@ public class PlayerBase
         }
     }
 
+    //更新逻辑
     public virtual void PlayerUpdate()
     {
         UpdateSquareStatistic();
@@ -929,8 +1030,10 @@ public class PlayerBase
         return gameOver;
     }
 
+    //是否到达顶部
     public bool IsReachTop()
     {
+        //第0行有任何方块不为空则到达顶部
         for (int c = 0; c < column; c++)
         {
             if (SquareMap[0, c] != null)
@@ -939,6 +1042,17 @@ public class PlayerBase
             }
         }
         return false;
+    }
+
+    public void StartAddSpeed()
+    {
+        currentMoveIntervalRecord = currentMapMoveInterval;
+        currentMapMoveInterval = GameSetting.MinSquareMoveInterval;
+    }
+
+    public void StopAddSpeed()
+    {
+        currentMapMoveInterval = currentMoveIntervalRecord;
     }
 
     #endregion

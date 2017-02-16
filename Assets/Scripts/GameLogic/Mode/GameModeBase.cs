@@ -20,7 +20,9 @@ public enum GameResult
 
 public abstract class GameModeBase
 {
-    protected List<PlayerBase> players = new List<PlayerBase>(); 
+    public List<PlayerBase> Players = new List<PlayerBase>();
+
+    public PlayerBase LocalPlayer;
 
     public abstract GameMode Mode { get; }
 

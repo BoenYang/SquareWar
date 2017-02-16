@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class StandAloneMode : GameModeBase
 {
-
     private PlayerBase player;
 
     public override GameMode Mode
@@ -14,18 +13,18 @@ public class StandAloneMode : GameModeBase
 
     public override void Init()
     {
-        player = new NormalPlayer();
+        LocalPlayer = player = PlayerBase.CreatePlayer(PlayerBase.PlayerType.Normal,MapMng.Instance.transform);
         player.SetMapPos(new Vector3(0, 0.7f, 0));
 
         player.OnChain += OnPlayerChain;
         player.OnGetScore += OnPlayerGetScore;
         player.OnGameOver += GameOver;
 
-        players = new List<PlayerBase>();
-        players.Add(player);
+        Players = new List<PlayerBase>();
+        Players.Add(player);
 
         GameUI.Ins.Init(Mode);
-        MapMng.Instance.SetPlayer(players);
+        MapMng.Instance.SetPlayer(Players);
         MapMng.Instance.InitMap(Mode);
     }
 
@@ -44,7 +43,7 @@ public class StandAloneMode : GameModeBase
 
     public override void GameOver()
     {
-        GameUI.Ins.ShowResultView(players);
+        GameUI.Ins.ShowResultView(Players);
     }
 
     public override void RestartGame()

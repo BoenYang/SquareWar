@@ -17,8 +17,8 @@ public class PVEMode : GameModeBase
 
     public override void Init()
     {
-        player = new NormalPlayer();
-        robotPlayer = new RobotPlayer();
+        LocalPlayer = player = PlayerBase.CreatePlayer(PlayerBase.PlayerType.Normal, MapMng.Instance.transform);
+        robotPlayer = PlayerBase.CreatePlayer(PlayerBase.PlayerType.Robot, MapMng.Instance.transform);
 
         player.OnGetScore += OnPlayerGetScore;
         player.OnChain += OnPlayerChain;
@@ -30,11 +30,11 @@ public class PVEMode : GameModeBase
 
         player.SetMapPos(new Vector3(1.09f,0.7f,0));
         robotPlayer.SetMapPos(new Vector3(10,0,0));
-        players.Add(player);
-        players.Add(robotPlayer);
+        Players.Add(player);
+        Players.Add(robotPlayer);
 
         GameUI.Ins.Init(Mode);
-        MapMng.Instance.SetPlayer(players);
+        MapMng.Instance.SetPlayer(Players);
         MapMng.Instance.InitMap(Mode);
     }
 
@@ -53,7 +53,7 @@ public class PVEMode : GameModeBase
 
     public override void GameOver()
     {
-        GameUI.Ins.ShowResultView(players);
+        GameUI.Ins.ShowResultView(Players);
     }
 
     public override void RestartGame()

@@ -70,16 +70,12 @@ public class RobotPlayer : PlayerBase
         }
     }
 
-    public RobotPlayer()
+    public override void InitPlayerMap(int[,] map)
     {
+        base.InitPlayerMap(map);
+
         isRobot = true;
         Name = "RobotPlayer";
-
-    }
-
-    public override void InitPlayerMap(MapMng mapMng, int[,] map)
-    {
-        base.InitPlayerMap(mapMng, map);
 
         thinkIntervalTimer = 0;
         operatorIntervalTimer = 0;

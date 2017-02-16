@@ -28,4 +28,6 @@ public static class GameSetting
 
     public static readonly int SquareTypeCount = 6;
 
+    public static readonly float MinSquareMoveInterval = 0.01f;
+
 }
