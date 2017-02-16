@@ -22,9 +22,15 @@ public class MapDataEditor : EditorWindow
     public static void Show()
     {
         MapDataEditor win = EditorWindow.GetWindow<MapDataEditor>();
-        win.position = new Rect(200,200, winWidth, winHeight);
+        win.position = new Rect(200, 200, winWidth, winHeight);
         win.titleContent = new GUIContent("MapData");
-        ((EditorWindow) win).Show();
+        win.Init();
+        ((EditorWindow)win).Show();
+    }
+
+    public void Init()
+    {
+        currentSelectPlayerIndex = 0;
     }
 
     [MenuItem("Tools/Test")]
@@ -40,10 +46,10 @@ public class MapDataEditor : EditorWindow
         Debug.Log(ms == null);
 
         GameObject go = Selection.activeGameObject;
-   
+
     }
 
-    private void AddScriptComponentUncheckedUndoable(GameObject go,MonoScript monoScript)
+    private void AddScriptComponentUncheckedUndoable(GameObject go, MonoScript monoScript)
     {
         Type t = typeof(UnityEditorInternal.InternalEditorUtility);
         MethodInfo methodInfo = t.GetMethod("AddScriptComponentUncheckedUndoable", BindingFlags.NonPublic | BindingFlags.Static);
@@ -61,15 +67,14 @@ public class MapDataEditor : EditorWindow
     {
         if (Application.isPlaying)
         {
-            if (MapMng.Instance != null)
+            if (MapMng.Instance != null && MapMng.Instance.Players != null)
             {
                 DrawPlayerPopup();
-               
-                DrawSquareSpriteData();
 
-                Repaint();
+                DrawSquareSpriteData();
             }
         }
+        Repaint();
     }
 
     private void DrawPlayerPopup()
@@ -145,6 +150,28 @@ public class MapDataEditor : EditorWindow
                     else
                     {
                         string s = ((int)squareMap[r, c].State) + "";
+                        GUI.Label(new Rect(pos, size), new GUIContent(s));
+                    }
+                }
+            }
+
+            startPos = new Vector2(700, startY);
+
+            width = 25;
+            for (int r = 0; r < squareMap.GetLength(0); r++)
+            {
+                for (int c = 0; c < squareMap.GetLength(1); c++)
+                {
+                    Vector2 pos = startPos + new Vector2(c * width, r * width);
+                    Vector2 size = Vector2.one * width;
+
+                    if (squareMap[r, c] == null)
+                    {
+                        GUI.Label(new Rect(pos, size), new GUIContent("-"));
+                    }
+                    else
+                    {
+                        string s = ((int)squareMap[r, c].RightSameTypeSquareCount) + "-" + squareMap[r,c].UnderSameTypeSquareCount;
                         GUI.Label(new Rect(pos, size), new GUIContent(s));
                     }
                 }

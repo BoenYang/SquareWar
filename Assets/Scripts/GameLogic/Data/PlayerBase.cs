@@ -53,11 +53,9 @@ public class PlayerBase
 
     private Vector3 mapOffset = Vector3.zero;
 
-    private Vector3 initMapPos;
-
     private List<SquareSprite[]> squareWillInsert = new List<SquareSprite[]>();
 
-    private List<RemoveData> removingData = new List<RemoveData>();
+    private List<RemoveData> removingDataList = new List<RemoveData>();
 
     private List<BlockSprite> blocks = new List<BlockSprite>(); 
 
@@ -125,7 +123,6 @@ public class PlayerBase
             }
         }
 
-        initMapPos = SquareRoot.transform.localPosition;
         OnChain(chainCount);
     }
 
@@ -398,11 +395,9 @@ public class PlayerBase
             s1.Row = r2;
             SquareMap[r1, c1] = s2;
             SquareMap[r2, c2] = s1;
-
             Vector3 moveToPos =  GetPos(r2 + insertedRawCount, c2);
             s1.MoveToPos(moveToPos, GameSetting.SquareSwapTime, () =>
             {
-                
             });
         }
 
@@ -412,7 +407,9 @@ public class PlayerBase
             s2.Row = r1;
 
             Vector3 moveToPos = GetPos(r1 + insertedRawCount, c1);
-            s2.MoveToPos(moveToPos, GameSetting.SquareSwapTime);
+            s2.MoveToPos(moveToPos, GameSetting.SquareSwapTime, () =>
+            {
+            });
         }
     }
 
@@ -420,7 +417,7 @@ public class PlayerBase
 
     #region 消除核心算法
 
-    private List<SquareSprite> removeList = new List<SquareSprite>();
+    private List<SquareSprite> removingSquareList = new List<SquareSprite>();
 
     private int chainCount = 1;
 
@@ -430,10 +427,61 @@ public class PlayerBase
 
     private void CheckRemove()
     {
-        removeList.Clear();
-        removingData.Clear();
+        removingSquareList.Clear();
+        //removingDataList.Clear();
         CheckHorizontalRemove();
         CheckVerticalRemove();
+        CalculateScore();
+        UpdateChainTimer();
+    }
+
+    private void CheckRemove2()
+    {
+        removingSquareList.Clear();
+        for (int r = 0; r < row; r++)
+        {
+            for (int c = 0; c < column; c++)
+            {
+                SquareSprite square = SquareMap[r, c];
+                if (square != null && square.CanSwap())
+                {
+                    if (square.RightSameTypeSquareCount >= 3)
+                    {
+                        RemoveData removeData = new RemoveData();
+                        removeData.StartRow = r;
+                        removeData.StartColumn = c;
+                        removeData.Count = square.RightSameTypeSquareCount;
+                        removeData.Dir = RemoveDir.Horizontal;
+                        RemoveConnectedBlock(removeData);
+                        Remove(removeData);
+                    }
+                }
+            }
+          
+        }
+
+        for (int c = 0; c < column; c++)
+        {
+            for (int r = 0; r < row; r++)
+            {
+                SquareSprite square = SquareMap[r, c];
+                if (square != null && square.CanSwap())
+                {
+                    if (square.UnderSameTypeSquareCount >= 3)
+                    {
+
+                        RemoveData removeData = new RemoveData();
+                        removeData.StartRow = r;
+                        removeData.StartColumn = c;
+                        removeData.Count = square.UnderSameTypeSquareCount;
+                        removeData.Dir = RemoveDir.Vertical;
+                        RemoveConnectedBlock(removeData);
+                        Remove(removeData);
+                    }
+                }
+            }
+        }
+
         CalculateScore();
         UpdateChainTimer();
     }
@@ -457,9 +505,9 @@ public class PlayerBase
 
     private void CalculateScore()
     {
-        if (removeList.Count > 0)
+        if (removingSquareList.Count > 0)
         {
-            int scoreGain = (removeList.Count - 1);
+            int scoreGain = (removingSquareList.Count - 1);
             if (chainCount > 1)
             {
                 scoreGain += 6*(chainCount - 1);
@@ -478,10 +526,13 @@ public class PlayerBase
         //检测水平方向消除
         for (int r = 0; r < row; r++)
         {
+            //搜索开始的第一个方块
             int firstType = 0;
+            //同类型方块数目
             int typeCount = 0;
             for (int c = 0; c < column - 1; c++)
             {
+                //从左到右，横向遍历不为空的方块
                 if (SquareMap[r, c] == null || !SquareMap[r,c].CanHorizontalRemove())
                 {
                     continue;
@@ -492,10 +543,12 @@ public class PlayerBase
                     typeCount = 1;
                 }
 
+                //从不为空的方块后一个方块开始搜索
                 int i = c + 1;
                 for (i = c + 1; i < column; i++)
                 {
                     SquareSprite checkingSuqare = SquareMap[r, i];
+                    //方块跟开始查找的第一个方块类型相同，并且横向可以被移除，则增加同类型方块数目
                     if (checkingSuqare != null && checkingSuqare.Type == firstType && checkingSuqare.CanHorizontalRemove())
                     {
                         typeCount++;
@@ -595,59 +648,10 @@ public class PlayerBase
         }
     }
 
-    private void MarkWillRemove(RemoveData removeData)
-    {
-        bool chain = false;
-        for (int i = 0; i < removeData.Count; i++)
-        {
-            if (removeData.Dir == RemoveDir.Horizontal)
-            {
-                SquareSprite squareNeedRemove = SquareMap[removeData.StartRow, removeData.StartColumn + i];
-                squareNeedRemove.HorizontalRemoved = true;
-                squareNeedRemove.MarkWillRemove();
-                if (squareNeedRemove.Chain)
-                {
-                    chain = true;
-                }
-                if (!squareNeedRemove.VerticalRemoved)
-                {
-                    removeList.Add(squareNeedRemove);
-                }
-            }
-            else
-            {
-               
-                SquareSprite squareNeedRemove = SquareMap[removeData.StartRow + i, removeData.StartColumn];
-                squareNeedRemove.VerticalRemoved =  true;
-                squareNeedRemove.MarkWillRemove();
-                if (squareNeedRemove.Chain)
-                {
-                    chain = true;
-                }
-                if (!squareNeedRemove.HorizontalRemoved)
-                {
-                    removeList.Add(squareNeedRemove);
-                }
-            }
-        }
-
-        if (chain)
-        {
-            chainCount++;
-            chainInterval = removeData.Count* GameSetting.SquareRemoveInterval;
-            chainTimer = 0f;
-            if (OnChain != null)
-            {
-                OnChain(chainCount);
-            }
-        }
-    }
-
     private void RemoveConnectedBlock(RemoveData removeData)
     {
         for (int i = 0; i < removeData.Count; i++)
         {
-
             SquareSprite left = null;
             SquareSprite right = null;
             SquareSprite above = null;
@@ -703,10 +707,64 @@ public class PlayerBase
 
     private void Remove(RemoveData removeData)
     {
+        removingDataList.Add(removeData);
+
+        //移除方块指针存储到List列表中，防止移除过程中增加行引起方块的列和行变化导致根据行,列获取的方块不正确
         removeData.ConvertToList(SquareMap);
-        removingData.Add(removeData);
+        //标记方块为移除，避免重复检测
         MarkWillRemove(removeData);
         mapMng.StartCoroutine(RemoveCorutine(removeData));
+    }
+
+    private void MarkWillRemove(RemoveData removeData)
+    {
+        bool chain = false;
+
+        for (int i = 0; i < removeData.RemoveList.Count; i++)
+        {
+            SquareSprite squareNeedRemove = removeData.RemoveList[i];
+            squareNeedRemove.MarkWillRemove();
+            if (squareNeedRemove.Chain)
+            {
+                chain = true;
+            }
+            if (!removingSquareList.Contains(squareNeedRemove))
+            {
+                removingSquareList.Add(squareNeedRemove);
+            }
+//
+//            //移除方向为横向
+//            if (removeData.Dir == RemoveDir.Horizontal)
+//            {
+//                //标记横向移除，如果没有被纵向移除过（表示已经加入过移除列表），则加入移除列表
+//                squareNeedRemove.HorizontalRemoved = true;
+//                if (!squareNeedRemove.VerticalRemoved)
+//                {
+//                    removingSquareList.Add(squareNeedRemove);
+//                }
+//            }
+//            else   //移除方向为纵向
+//            {
+//                //标记纵向移除，如果没有被横向移除过（表示已经加入过移除列表），则加入移除列表
+//                squareNeedRemove.VerticalRemoved = true;
+//                if (!squareNeedRemove.HorizontalRemoved)
+//                {
+//                    removingSquareList.Add(squareNeedRemove);
+//                }
+//            }
+        }
+
+        //计算连消
+        if (chain)
+        {
+            chainCount++;
+            chainInterval = removeData.Count * 2;
+            chainTimer = 0f;
+            if (OnChain != null)
+            {
+                OnChain(chainCount);
+            }
+        }
     }
 
     private IEnumerator RemoveCorutine(RemoveData removeData)
@@ -735,7 +793,63 @@ public class PlayerBase
         }
 
         //消除完毕之后全部清除
-        removingData.Remove(removeData);
+        removingDataList.Remove(removeData);
+    }
+
+    private void UpdateSquareStatistic()
+    {
+        for (int r = row - 1; r >= 0; r--)
+        {
+            for (int c = column - 1; c >= 0; c--)
+            {
+                SquareSprite square = SquareMap[r, c];
+                if (square != null)
+                {
+                    if (square.CanSwap())
+                    {
+                        if (r < row - 1)
+                        {
+                            SquareSprite under = SquareMap[r + 1, c];
+                            if (under != null && square.Type == under.Type && under.CanSwap())
+                            {
+                                square.UnderSameTypeSquareCount = under.UnderSameTypeSquareCount + 1;
+                            }
+                            else
+                            {
+                                square.UnderSameTypeSquareCount = 1;
+                            }
+                        }
+                        else
+                        {
+                            square.UnderSameTypeSquareCount = 1;
+                        }
+
+                        if (c < column - 1)
+                        {
+                            SquareSprite right = SquareMap[r, c + 1];
+                            if (right != null && square.Type == right.Type && right.CanSwap())
+                            {
+                                square.RightSameTypeSquareCount = right.RightSameTypeSquareCount + 1;
+                            }
+                            else
+                            {
+                                square.RightSameTypeSquareCount = 1;
+                            }
+                        }
+                        else
+                        {
+                            square.RightSameTypeSquareCount = 1;
+                        }
+                    }
+                    else
+                    {
+                        square.RightSameTypeSquareCount = 1;
+                        square.UnderSameTypeSquareCount = 1;
+                    }
+                }
+             
+            }
+        }
     }
 
     #endregion
@@ -746,7 +860,7 @@ public class PlayerBase
 
     protected virtual void UpdateState()
     {
-        for (int r = 0; r < row; r++)
+        for (int r = row - 1; r >= 0; r--)
         {
             for (int c = 0; c < column; c++)
             {
@@ -764,7 +878,7 @@ public class PlayerBase
 
     protected virtual void MoveMap()
     {
-        if (removingData.Count != 0)
+        if (removingDataList.Count != 0)
         {
             return;
         }
@@ -804,8 +918,9 @@ public class PlayerBase
 
     public virtual void PlayerUpdate()
     {
+        UpdateSquareStatistic();
+        CheckRemove2();
         UpdateState();
-        CheckRemove();
         MoveMap();
     }
 

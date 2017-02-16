@@ -25,6 +25,10 @@ public class SquareSprite : MonoBehaviour
     public BlockSprite Block;
 
     public SpriteRenderer Renderer;
+
+    public int UnderSameTypeSquareCount;
+
+    public int RightSameTypeSquareCount;
     
     private static Dictionary<int,string> effectDict = new Dictionary<int, string>()
     {
@@ -92,8 +96,6 @@ public class SquareSprite : MonoBehaviour
         this.player = player;
     }
 
-  
-
     public void OnMouseDown()
     {
         if (Row < 0)
@@ -136,8 +138,11 @@ public class SquareSprite : MonoBehaviour
 
     public void MarkWillRemove()
     {
-        State = SquareState.Clear;
-        transform.DOScale(Vector3.one, 0.2f).SetLoops(2, LoopType.Yoyo);
+        if (State != SquareState.Clear)
+        {
+            State = SquareState.Clear;
+            transform.DOScale(Vector3.one, 0.2f).SetLoops(2, LoopType.Yoyo);
+        }
     }
 
     public void Remove()
@@ -157,7 +162,6 @@ public class SquareSprite : MonoBehaviour
     public void ShowRemoveEffect()
     {
         GameObject effectObj = Resources.Load<GameObject>("Effect/" + effectDict[Type]);
-
         GameObject effect = Instantiate(effectObj, gameObject.transform.position, Quaternion.identity) as GameObject;
 
         Destroy(effect,1.0f);
@@ -246,6 +250,16 @@ public class SquareSprite : MonoBehaviour
                     if (under == null)
                     {
                         State = SquareState.Hung;
+
+                        if (Row > 0)
+                        {
+                            SquareSprite above = player.SquareMap[Row - 1, Column];
+                            if (above != null && above.CanSwap())
+                            {
+                                above.State = SquareState.Hung;
+                            }
+                        }
+
                         Hung();
                     }
                     else if (under.State == SquareState.Hung)

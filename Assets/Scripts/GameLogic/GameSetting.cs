@@ -12,7 +12,7 @@ public static class GameSetting
 
     public static readonly float SquareSwapTime = 0.1f;
 
-    public static readonly float SquareHungTime = 0.08f;
+    public static readonly float SquareHungTime = 0.14f;
 
     public static readonly int RawCount = 12;
 

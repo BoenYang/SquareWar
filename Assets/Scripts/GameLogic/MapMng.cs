@@ -10,20 +10,16 @@ public class MapMng : MonoBehaviour
     {
         get
         {
-            if (ins == null)
-            {
-                GameObject go = new GameObject("MapMng");
-                ins = go.AddComponent<MapMng>();
-            }
             return ins;
         }
     }
 
-    public List<PlayerBase> Players;
+    public List<PlayerBase> Players = null;
 
     void Awake()
     {
         ins = this;
+        Players = null;
     }
 
     public int[,] RandomGenerateMapData()
