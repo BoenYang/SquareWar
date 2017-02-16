@@ -53,6 +53,10 @@ public class PVEMode : GameModeBase
 
     public override void GameOver()
     {
+        for (int i = 0; i < Players.Count; i++)
+        {
+            Players[i].StopAllCoroutines();
+        }
         GameUI.Ins.ShowResultView(Players);
     }
 

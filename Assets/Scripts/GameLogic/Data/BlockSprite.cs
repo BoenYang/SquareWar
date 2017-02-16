@@ -124,7 +124,7 @@ public class BlockSprite : MonoBehaviour
         {
             squares[lastRaw, c].gameObject.SetActive(true);
             squares[lastRaw, c].Renderer.color = col;
-            squares[lastRaw, c].transform.SetParent(player.SquareRoot);
+            squares[lastRaw, c].transform.SetParent(player.transform);
             squares[lastRaw, c].Block = null;
         }
 

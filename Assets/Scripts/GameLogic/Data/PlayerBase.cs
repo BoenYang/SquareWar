@@ -34,20 +34,11 @@ public class PlayerBase : MonoBehaviour
     //分数
     public int Score = 0;
 
-    //方块地图容器
-    public SquareSprite[,] SquareMap = null;
-
     //游戏总时间
     public float TotalGameTime = 0;
 
-    //方块更节点
-    [System.NonSerialized]
-    public Transform SquareRoot;
-
-    //是否是机器人判断
-    public bool IsRobot { get { return isRobot; } }
-
-    protected bool isRobot = false;
+    //方块地图容器
+    public SquareSprite[,] SquareMap = null;
 
     //缓存行数目，简化代码
     protected int row;
@@ -62,13 +53,16 @@ public class PlayerBase : MonoBehaviour
     private float moveIntervalTimer;
 
     //当前地图移动间隔
-    public float currentMapMoveInterval;
+    private float currentMapMoveInterval;
 
     //移动间隔减少计时器 大于 GameSetting.SpeedAddInterval 时 currentMapMoveInterval = currentMapMoveInterval -  GameSetting.MoveIntervalSubStep
     private float moveIntervalSubTimer;
 
     //是否游戏结束
     private bool gameOver = false;
+
+    //方块节点缓存
+    private Transform squareRoot;
 
     //0行0列的方块位置
     private Vector3 startPos;
@@ -91,6 +85,10 @@ public class PlayerBase : MonoBehaviour
     //移除的背景的SpriteRenderer缓存，用于减少背景GameObject创建次数
     private List<SpriteRenderer> backgroundCache = new List<SpriteRenderer>();
 
+    //是否是机器人判断
+    public bool IsRobot { get { return isRobot; } }
+
+    protected bool isRobot = false;
 
     public static PlayerBase CreatePlayer(PlayerType playerType,Transform root)
     {
@@ -131,9 +129,9 @@ public class PlayerBase : MonoBehaviour
         SquareMap = new SquareSprite[row, column];
         backgroundMap = new List<SpriteRenderer[]>();
 
-        SquareRoot = transform;
+        squareRoot = transform;
 
-        transform.localPosition = mapOffset;
+        squareRoot.localPosition = mapOffset;
 
         for (int r = 0; r < row; r++)
         {
@@ -146,12 +144,12 @@ public class PlayerBase : MonoBehaviour
                 {
                     Vector3 pos = GetPos(r, c);
                     SquareSprite ss = SquareSprite.CreateSquare(map[r, c], r, c);
-                    ss.transform.SetParent(SquareRoot);
+                    ss.transform.SetParent(squareRoot);
                     ss.transform.localPosition = pos;
                     ss.name = "Rect[" + r + "," + c + "]";
                     ss.SetPlayer(this);
                     SquareMap[r, c] = ss;
-                    SquareMap[r, c].gameObject.layer = SquareRoot.gameObject.layer;
+                    SquareMap[r, c].gameObject.layer = squareRoot.gameObject.layer;
                 }
                 else
                 {
@@ -287,10 +285,10 @@ public class PlayerBase : MonoBehaviour
         {
             Vector3 pos = GetPos(row + squareWillInsert.Count + insertedRawCount, i);
             insertRawSquare[i] = SquareSprite.CreateSquare(insertRawData[i], -1, i);
-            insertRawSquare[i].transform.SetParent(SquareRoot);
+            insertRawSquare[i].transform.SetParent(squareRoot);
             insertRawSquare[i].transform.localPosition = pos;
             insertRawSquare[i].name = "Rect[" + 0 + "," + i + "]";
-            insertRawSquare[i].gameObject.layer = SquareRoot.gameObject.layer;
+            insertRawSquare[i].gameObject.layer = squareRoot.gameObject.layer;
             insertRawSquare[i].SetGray(true);
             insertRawSquare[i].SetPlayer(this);
 
@@ -326,8 +324,8 @@ public class PlayerBase : MonoBehaviour
 
             sr.material = Resources.Load<Material>("Materials/SpriteWithStencil");
 
-            sprite.layer = SquareRoot.gameObject.layer;
-            sprite.transform.SetParent(SquareRoot);
+            sprite.layer = squareRoot.gameObject.layer;
+            sprite.transform.SetParent(squareRoot);
             sprite.transform.localScale = Vector3.one * 0.8f;
         }
 
@@ -362,10 +360,10 @@ public class PlayerBase : MonoBehaviour
 
         Vector3 pos = GetPos(insertRaw + insertedRawCount, insertColumn) + new Vector3( (dataColumnCount - 1) * GameSetting.SquareWidth/2f, insertRaw * GameSetting.SquareWidth/2f,0);
         BlockSprite bs = BlockSprite.CreateBlockSprite(insertRaw, insertColumn, type, data);
-        bs.transform.SetParent(SquareRoot);
+        bs.transform.SetParent(squareRoot);
         bs.transform.localPosition = pos;
         bs.name = "Block[" + insertRaw + "," + insertColumn + "]";
-        bs.gameObject.layer = SquareRoot.gameObject.layer;
+        bs.gameObject.layer = squareRoot.gameObject.layer;
 
         bs.SetPlayer(this);
         bs.CreateHideSquareSprite();
@@ -399,10 +397,10 @@ public class PlayerBase : MonoBehaviour
 
         Vector3 pos = GetPos(insertRaw  + insertedRawCount, insertColumn) + new Vector3((dataColumnCount - 1) * GameSetting.SquareWidth / 2f, insertRaw * GameSetting.SquareWidth / 2f, 0);
         BlockSprite bs = BlockSprite.CreateBlockSprite(insertRaw, insertColumn, type, data);
-        bs.transform.SetParent(SquareRoot);
+        bs.transform.SetParent(squareRoot);
         bs.transform.localPosition = pos;
         bs.name = "Block[" + insertRaw + "," + insertColumn + "]";
-        bs.gameObject.layer = SquareRoot.gameObject.layer;
+        bs.gameObject.layer = squareRoot.gameObject.layer;
 
         bs.SetPlayer(this);
         bs.CreateHideSquareSprite();
@@ -1004,8 +1002,8 @@ public class PlayerBase : MonoBehaviour
 
             moveIntervalTimer = 0;
             moveDistance += GameSetting.BaseMapMoveSpeed;
-            Vector3 curPos = SquareRoot.localPosition;
-            SquareRoot.localPosition = curPos + new Vector3(0, GameSetting.BaseMapMoveSpeed, 0);
+            Vector3 curPos = squareRoot.localPosition;
+            squareRoot.localPosition = curPos + new Vector3(0, GameSetting.BaseMapMoveSpeed, 0);
 
             //每移动一个方块距离后增加一行
             if (Mathf.Abs(moveDistance - GameSetting.SquareWidth) <= 0.000001f)

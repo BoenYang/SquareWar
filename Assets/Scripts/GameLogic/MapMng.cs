@@ -75,6 +75,7 @@ public class MapMng : MonoBehaviour
     public void ClearAllPlayer()
     {
         StopAllCoroutines();
+
         Players = null;
 
         for (int i = transform.childCount - 1;i >= 0; i--)
