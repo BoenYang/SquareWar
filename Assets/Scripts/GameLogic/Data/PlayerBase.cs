@@ -67,6 +67,8 @@ public class PlayerBase : MonoBehaviour
     //地图偏移
     private Vector3 mapOffset = Vector3.zero;
 
+    private GameObject selectFrame;
+
     //底部待插入的方块行
     private List<SquareSprite[]> squareWillInsert = new List<SquareSprite[]>();
 
@@ -133,6 +135,11 @@ public class PlayerBase : MonoBehaviour
         squareRoot = transform;
 
         squareRoot.localPosition = mapOffset;
+
+        selectFrame = Instantiate(Resources.Load<GameObject>("Prefab/Effect/SquareSelectFrame"));
+        selectFrame.transform.SetParent(squareRoot);
+        selectFrame.SetActive(false);
+        selectFrame.transform.localScale = Vector3.one*0.8f;
 
         for (int r = 0; r < row; r++)
         {
@@ -325,7 +332,7 @@ public class PlayerBase : MonoBehaviour
 
             sprite.layer = squareRoot.gameObject.layer;
             sprite.transform.SetParent(squareRoot);
-            sprite.transform.localScale = Vector3.one * 0.8f;
+            sprite.transform.localScale = Vector3.one * 0.76f;
         }
 
         sprite.transform.localPosition = GetPos(r, c);
@@ -419,8 +426,16 @@ public class PlayerBase : MonoBehaviour
 
     #region 方块移动
 
+    public void ClickSquare(SquareSprite square)
+    {
+        selectFrame.SetActive(true);
+        selectFrame.transform.localPosition = square.transform.localPosition;
+    }
+
     public void SwapSquare(SquareSprite movingSquare, MoveDir dir)
     {
+        selectFrame.SetActive(false);
+
         int raw = movingSquare.Row;
         int currentColumn = movingSquare.Column;
         int targetColumn = currentColumn;

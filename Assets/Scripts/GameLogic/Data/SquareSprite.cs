@@ -102,6 +102,7 @@ public class SquareSprite : MonoBehaviour
         {
             return;
         }
+        player.ClickSquare(this);
         mouseDownPos = Input.mousePosition;
     }
 
