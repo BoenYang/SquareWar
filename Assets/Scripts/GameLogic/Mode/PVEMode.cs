@@ -17,6 +17,8 @@ public class PVEMode : GameModeBase
 
     public override void Init()
     {
+        SoundMng.Instance.PlayMusic("Audio/Music_Saute");
+
         LocalPlayer = player = PlayerBase.CreatePlayer(PlayerBase.PlayerType.Normal, MapMng.Instance.transform);
         robotPlayer = PlayerBase.CreatePlayer(PlayerBase.PlayerType.Robot, MapMng.Instance.transform);
 
@@ -53,6 +55,7 @@ public class PVEMode : GameModeBase
 
     public override void GameOver()
     {
+        SoundMng.Instance.StopMusic();
         for (int i = 0; i < Players.Count; i++)
         {
             Players[i].StopAllCoroutines();
@@ -62,6 +65,7 @@ public class PVEMode : GameModeBase
 
     public override void RestartGame()
     {
+        SoundMng.Instance.PlayMusic("Audio/Music_Saute");
         GameScene.Instance.StopGame();
         MapMng.Instance.ClearAllPlayer();
         GameScene.Instance.StartGame();

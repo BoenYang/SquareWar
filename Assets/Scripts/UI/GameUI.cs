@@ -87,7 +87,7 @@ public class GameUI : MonoBehaviour
 
         if (GameScene.Instance.Mode == GameMode.PVE)
         {
-            PlayerBase winner = players.Find((p) => !p.IsGameOver());
+            PlayerBase winner = players.Find((p) => !p.IsGameOver);
 
             if (winner.IsRobot)
             {

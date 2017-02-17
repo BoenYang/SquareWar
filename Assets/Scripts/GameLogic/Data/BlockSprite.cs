@@ -26,13 +26,12 @@ public class BlockSprite : MonoBehaviour
 
     private PlayerBase player;
 
-
     public static BlockSprite CreateBlockSprite(int startRaw,int startColumn,int type,int[,] data)
     {
         GameObject go = new GameObject();
         BlockSprite bs = go.AddComponent<BlockSprite>();
         SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
-        string sprite = data.GetLength(0) + "-" + data.GetLength(1);
+        string sprite = "Texture/Game/" + data.GetLength(0) + "-" + data.GetLength(1);
         sr.sortingLayerName = "Game";
         sr.sortingOrder = 3;
 
@@ -189,7 +188,7 @@ public class BlockSprite : MonoBehaviour
         }
         else
         {
-            player.RemoveBlock(this);
+            player.RemoveBlockIfContainSquare(this);
             Destroy(gameObject);
         }
         Raw--;

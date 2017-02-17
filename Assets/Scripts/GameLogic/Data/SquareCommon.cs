@@ -24,33 +24,29 @@ public enum RemoveDir
 
 public class RemoveData
 {
-    public int StartRow;
-    public int StartColumn;
-    public int Count;
-    public RemoveDir Dir;
+    public List<SquareSprite> RemoveList = new List<SquareSprite>();
 
-    public List<SquareSprite> RemoveList; 
-
-    public void ConvertToList(SquareSprite[,] map)
+    public void AddHorizontalRemove(int startRow, int startColumn, int count, SquareSprite[,] map)
     {
-        RemoveList = new List<SquareSprite>();
-        for (int i = 0; i < Count; i++)
+        for (int i = 0; i < count; i++)
         {
-            SquareSprite squareNeedRemove = null;
-            if (Dir == RemoveDir.Horizontal)
+            SquareSprite square = map[startRow, startColumn + i];
+            if (!RemoveList.Contains(square))
             {
-                squareNeedRemove = map[StartRow, StartColumn + i];
+                RemoveList.Add(square);
             }
-            else
-            {
-                squareNeedRemove = map[StartRow + i, StartColumn];
-            }
-            RemoveList.Add(squareNeedRemove);
         }
     }
 
-    public override string ToString()
+    public void AddVertivalRemove(int startRow, int startColumn, int count, SquareSprite[,] map)
     {
-        return string.Format("第{0}行,第{1}列，消除数量{2}", StartRow, StartColumn, Count);
+        for (int i = 0; i < count; i++)
+        {
+            SquareSprite square = map[startRow + i, startColumn];
+            if (!RemoveList.Contains(square))
+            {
+                RemoveList.Add(square);
+            }
+        }
     }
 }

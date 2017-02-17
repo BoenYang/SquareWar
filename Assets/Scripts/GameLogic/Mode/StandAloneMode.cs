@@ -13,6 +13,8 @@ public class StandAloneMode : GameModeBase
 
     public override void Init()
     {
+        SoundMng.Instance.PlayMusic("Audio/Music_Saute");
+
         LocalPlayer = player = PlayerBase.CreatePlayer(PlayerBase.PlayerType.Normal,MapMng.Instance.transform);
         player.SetMapPos(new Vector3(0, 0.7f, 0));
 
@@ -43,11 +45,13 @@ public class StandAloneMode : GameModeBase
 
     public override void GameOver()
     {
+        SoundMng.Instance.StopMusic();
         GameUI.Ins.ShowResultView(Players);
     }
 
     public override void RestartGame()
     {
+        SoundMng.Instance.PlayMusic("Audio/Music_Saute");
         GameScene.Instance.StopGame();
         MapMng.Instance.ClearAllPlayer();
         GameScene.Instance.StartGame();

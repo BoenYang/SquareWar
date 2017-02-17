@@ -118,7 +118,7 @@ public class MapMng : MonoBehaviour
         bool gameOver = false;
         for (int i = 0; i < Players.Count; i++)
         {
-            if (Players[i].IsGameOver())
+            if (Players[i].IsGameOver)
             {
                 gameOver = true;
                 break;

@@ -58,9 +58,6 @@ public class PlayerBase : MonoBehaviour
     //移动间隔减少计时器 大于 GameSetting.SpeedAddInterval 时 currentMapMoveInterval = currentMapMoveInterval -  GameSetting.MoveIntervalSubStep
     private float moveIntervalSubTimer;
 
-    //是否游戏结束
-    private bool gameOver = false;
-
     //方块节点缓存
     private Transform squareRoot;
 
@@ -87,9 +84,13 @@ public class PlayerBase : MonoBehaviour
 
     //是否是机器人判断
     public bool IsRobot { get { return isRobot; } }
-
     protected bool isRobot = false;
 
+    //是否游戏结束
+    public bool IsGameOver { get { return gameOver; } }
+    protected bool gameOver = false;
+
+    //创建Player对应的GameObject
     public static PlayerBase CreatePlayer(PlayerType playerType,Transform root)
     {
         GameObject playerGo = new GameObject(playerType.ToString());
@@ -160,14 +161,12 @@ public class PlayerBase : MonoBehaviour
                 rowBackground[c] = sr;
             }
         }
-
-        OnChain(chainCount);
     }
 
     //初始化地图遮罩
     public void InitMapMask()
     {
-        Sprite sprite = Resources.Load<Sprite>("fk1");
+        Sprite sprite = Resources.Load<Sprite>("Texture/Game/fk1");
 
         GameObject mask = new GameObject(Name + "MapMask");
         mask.gameObject.layer = gameObject.layer;
@@ -303,7 +302,7 @@ public class PlayerBase : MonoBehaviour
     //创建方块背景
     private SpriteRenderer CreateBackground(int r,int c)
     {
-        Sprite bg = Resources.Load<Sprite>("fk" + (((r + c) % 2) + 1));
+        Sprite bg = Resources.Load<Sprite>("Texture/Game/fk" + (((r + c) % 2) + 1));
         GameObject sprite = null;
         SpriteRenderer sr = null;
 
@@ -411,7 +410,7 @@ public class PlayerBase : MonoBehaviour
     /// 移除方块
     /// </summary>
     /// <param name="block"></param>
-    public void RemoveBlock(BlockSprite block)
+    public void RemoveBlockIfContainSquare(BlockSprite block)
     {
         blocks.Remove(block);
     }
@@ -485,9 +484,6 @@ public class PlayerBase : MonoBehaviour
 
     #region 消除核心算法
 
-    //当前帧移除的方块列表，用于计算分数
-    private List<SquareSprite> removingSquareList = new List<SquareSprite>();
-
     //连消数
     private int chainCount = 1;
 
@@ -497,22 +493,156 @@ public class PlayerBase : MonoBehaviour
     //连消间隔
     private float chainInterval;
 
-    private void CheckRemove()
-    {
-        removingSquareList.Clear();
-        //removingDataList.Clear();
-        CheckHorizontalRemove();
-        CheckVerticalRemove();
-        CalculateScore();
-        UpdateChainTimer();
-    }
+    #region 老版消除算法
+    //    /// <summary>
+    //    /// 老版消除核心算法
+    //    /// </summary>
+    //    private void CheckRemove()
+    //    {
+    //        CheckHorizontalRemove();
+    //        CheckVerticalRemove();
+    ////        CalculateScore();
+    //        UpdateChainTimer();
+    //    }
+    //    
+    //    //检查横向消除
+    //    private void CheckHorizontalRemove()
+    //    {
+    //        //检测水平方向消除
+    //        for (int r = 0; r < row; r++)
+    //        {
+    //            //搜索开始的第一个方块
+    //            int firstType = 0;
+    //            //同类型方块数目
+    //            int typeCount = 0;
+    //            for (int c = 0; c < column - 1; c++)
+    //            {
+    //                //从左到右，横向遍历不为空的方块
+    //                if (SquareMap[r, c] == null || !SquareMap[r, c].CanHorizontalRemove())
+    //                {
+    //                    continue;
+    //                }
+    //                else
+    //                {
+    //                    firstType = SquareMap[r, c].Type;
+    //                    typeCount = 1;
+    //                }
+    //
+    //                //从不为空的方块后一个方块开始搜索
+    //                int i = c + 1;
+    //                for (i = c + 1; i < column; i++)
+    //                {
+    //                    SquareSprite checkingSuqare = SquareMap[r, i];
+    //                    //方块跟开始查找的第一个方块类型相同，并且横向可以被移除，则增加同类型方块数目
+    //                    if (checkingSuqare != null && checkingSuqare.Type == firstType && checkingSuqare.CanHorizontalRemove())
+    //                    {
+    //                        typeCount++;
+    //                    }
+    //                    else
+    //                    {
+    //                        if (typeCount >= 3)
+    //                        {
+    //                            RemoveData removeData = new RemoveData();
+    ////                            removeData.StartRow = r;
+    ////                            removeData.StartColumn = c;
+    ////                            removeData.Count = typeCount;
+    ////                            removeData.Dir = RemoveDir.Horizontal;
+    //                            RemoveConnectedBlock(removeData);
+    //                            Remove(removeData);
+    //                        }
+    //                        // Debug.LogFormat("第{0}行，第{1}列,重复数量{2}",r,c,typeCount);
+    //                        break;
+    //                    }
+    //                }
+    //
+    //                SquareSprite lastSquare = SquareMap[r, i - 1];
+    //                if (typeCount >= 3 && i == column && lastSquare != null && lastSquare.CanHorizontalRemove())
+    //                {
+    //                    RemoveData removeData = new RemoveData();
+    ////                    removeData.StartRow = r;
+    ////                    removeData.StartColumn = c;
+    ////                    removeData.Count = typeCount;
+    ////                    removeData.Dir = RemoveDir.Horizontal;
+    //                    RemoveConnectedBlock(removeData);
+    //                    Remove(removeData);
+    //                    //Debug.LogFormat("第{0}行，第{1}列,重复数量{2}",r,c,typeCount);
+    //                }
+    //            }
+    //            // Debug.LogFormat("第{0}行，第{1}列,重复数量{2}", r, mapData.GetLength(1) - 1, 1);
+    //        }
+    //    }
+    //
+    //    //检查纵向消除
+    //    private void CheckVerticalRemove()
+    //    {
+    //        //检测垂直方向消除
+    //        for (int c = 0; c < column; c++)
+    //        {
+    //            int firstType = 0;
+    //            int typeCount = 0;
+    //            for (int r = 0; r < row - 1; r++)
+    //            {
+    //                if (SquareMap[r, c] == null || !SquareMap[r, c].CanVerticalRemove())
+    //                {
+    //                    continue;
+    //                }
+    //                else
+    //                {
+    //                    firstType = SquareMap[r, c].Type;
+    //                    typeCount = 1;
+    //                }
+    //
+    //                int i = r + 1;
+    //                for (i = r + 1; i < row; i++)
+    //                {
+    //                    SquareSprite checkingSuqare = SquareMap[i, c];
+    //                    if (checkingSuqare != null && checkingSuqare.Type == firstType && checkingSuqare.CanVerticalRemove())
+    //                    {
+    //                        typeCount++;
+    //                    }
+    //                    else
+    //                    {
+    //                        if (typeCount >= 3)
+    //                        {
+    //                            RemoveData removeData = new RemoveData();
+    ////                            removeData.StartRow = r;
+    ////                            removeData.StartColumn = c;
+    ////                            removeData.Count = typeCount;
+    ////                            removeData.Dir = RemoveDir.Vertical;
+    //                            Remove(removeData);
+    //                            RemoveConnectedBlock(removeData);
+    //                        }
+    //                        //Debug.LogFormat("第{0}列，第{1}行,重复数量{2}", c, r, typeCount);
+    //                        break;
+    //                    }
+    //                }
+    //
+    //                SquareSprite lastSquare = SquareMap[i - 1, c];
+    //                if (typeCount >= 3 && i == row && lastSquare != null && lastSquare.CanVerticalRemove())
+    //                {
+    //                    RemoveData removeData = new RemoveData();
+    ////                    removeData.StartRow = r;
+    ////                    removeData.StartColumn = c;
+    ////                    removeData.Count = typeCount;
+    ////                    removeData.Dir = RemoveDir.Vertical;
+    //                    Remove(removeData);
+    //                    RemoveConnectedBlock(removeData);
+    //                    // Debug.LogFormat("第{0}行，第{1}列,重复数量{2}",r,c,typeCount);
+    //                }
+    //            }
+    //            //Debug.LogFormat("第{0}列，第{1}行,重复数量{2}", c, mapData.GetLength(0), 1);
+    //        }
+    //    }
+#endregion 
 
     /// <summary>
-    /// 消除核心算法
+    /// 简化性能优化之后的消除核心算法
     /// </summary>
-    private void CheckRemove2()
+    private void CheckRemove()
     {
-        removingSquareList.Clear();
+        RemoveData removeData = null;
+
+        //检查横向
         for (int r = 0; r < row; r++)
         {
             for (int c = 0; c < column; c++)
@@ -522,19 +652,17 @@ public class PlayerBase : MonoBehaviour
                 {
                     if (square.RightSameTypeSquareCount >= 3)
                     {
-                        RemoveData removeData = new RemoveData();
-                        removeData.StartRow = r;
-                        removeData.StartColumn = c;
-                        removeData.Count = square.RightSameTypeSquareCount;
-                        removeData.Dir = RemoveDir.Horizontal;
-                        RemoveConnectedBlock(removeData);
-                        Remove(removeData);
+                        if (removeData == null)
+                        {
+                            removeData = new RemoveData();
+                        }
+                        removeData.AddHorizontalRemove(r,c,square.RightSameTypeSquareCount,SquareMap);
                     }
                 }
             }
-          
         }
 
+        //检查纵向
         for (int c = 0; c < column; c++)
         {
             for (int r = 0; r < row; r++)
@@ -544,47 +672,28 @@ public class PlayerBase : MonoBehaviour
                 {
                     if (square.UnderSameTypeSquareCount >= 3)
                     {
-
-                        RemoveData removeData = new RemoveData();
-                        removeData.StartRow = r;
-                        removeData.StartColumn = c;
-                        removeData.Count = square.UnderSameTypeSquareCount;
-                        removeData.Dir = RemoveDir.Vertical;
-                        RemoveConnectedBlock(removeData);
-                        Remove(removeData);
+                        if (removeData == null)
+                        {
+                            removeData = new RemoveData();
+                        }
+                        removeData.AddVertivalRemove(r, c, square.UnderSameTypeSquareCount, SquareMap);
                     }
                 }
             }
         }
 
-        CalculateScore();
-        UpdateChainTimer();
-    }
-
-    //更新连消计时器
-    private void UpdateChainTimer()
-    {
-        if (chainCount > 1)
+        if (removeData != null)
         {
-            chainTimer += Time.deltaTime;
-            if (chainTimer > chainInterval)
-            {
-                chainCount = 1;
-                chainTimer = 0f;
-                if (OnChain != null)
-                {
-                    OnChain(chainCount);
-                }
-            }
+            Remove(removeData);
         }
     }
 
     //计算分数
-    private void CalculateScore()
+    private void CalculateScore(RemoveData removeData)
     {
-        if (removingSquareList.Count > 0)
+        if (removeData.RemoveList.Count > 0)
         {
-            int scoreGain = (removingSquareList.Count - 1);
+            int scoreGain = (removeData.RemoveList.Count - 1);
             if (chainCount > 1)
             {
                 scoreGain += 6*(chainCount - 1);
@@ -595,157 +704,45 @@ public class PlayerBase : MonoBehaviour
                 OnGetScore(scoreGain);
             }
         }
-       
     }
 
-    //检查横向消除
-    private void CheckHorizontalRemove()
+    private void CalculateChain(RemoveData removeData)
     {
-        //检测水平方向消除
-        for (int r = 0; r < row; r++)
+        bool chain = false;
+        for (int i = 0; i < removeData.RemoveList.Count; i++)
         {
-            //搜索开始的第一个方块
-            int firstType = 0;
-            //同类型方块数目
-            int typeCount = 0;
-            for (int c = 0; c < column - 1; c++)
+            SquareSprite squareNeedRemove = removeData.RemoveList[i];
+            if (squareNeedRemove.Chain)
             {
-                //从左到右，横向遍历不为空的方块
-                if (SquareMap[r, c] == null || !SquareMap[r,c].CanHorizontalRemove())
-                {
-                    continue;
-                }
-                else
-                {
-                    firstType = SquareMap[r, c].Type;
-                    typeCount = 1;
-                }
-
-                //从不为空的方块后一个方块开始搜索
-                int i = c + 1;
-                for (i = c + 1; i < column; i++)
-                {
-                    SquareSprite checkingSuqare = SquareMap[r, i];
-                    //方块跟开始查找的第一个方块类型相同，并且横向可以被移除，则增加同类型方块数目
-                    if (checkingSuqare != null && checkingSuqare.Type == firstType && checkingSuqare.CanHorizontalRemove())
-                    {
-                        typeCount++;
-                    }
-                    else
-                    {
-                        if (typeCount >= 3)
-                        {
-                            RemoveData removeData = new RemoveData();
-                            removeData.StartRow = r;
-                            removeData.StartColumn = c;
-                            removeData.Count = typeCount;
-                            removeData.Dir = RemoveDir.Horizontal;
-                            RemoveConnectedBlock(removeData);
-                            Remove(removeData);
-                        }
-                        // Debug.LogFormat("第{0}行，第{1}列,重复数量{2}",r,c,typeCount);
-                        break;
-                    }
-                }
-
-                SquareSprite lastSquare = SquareMap[r, i - 1];
-                if (typeCount >= 3 && i == column && lastSquare != null && lastSquare.CanHorizontalRemove())
-                {
-                    RemoveData removeData = new RemoveData();
-                    removeData.StartRow = r;
-                    removeData.StartColumn = c;
-                    removeData.Count = typeCount;
-                    removeData.Dir = RemoveDir.Horizontal;
-                    RemoveConnectedBlock(removeData);
-                    Remove(removeData);
-                    //Debug.LogFormat("第{0}行，第{1}列,重复数量{2}",r,c,typeCount);
-                }
+                chain = true;
             }
-            // Debug.LogFormat("第{0}行，第{1}列,重复数量{2}", r, mapData.GetLength(1) - 1, 1);
         }
-    }
 
-    //检查纵向消除
-    private void CheckVerticalRemove()
-    {
-        //检测垂直方向消除
-        for (int c = 0; c < column; c++)
+        //计算连消
+        if (chain)
         {
-            int firstType = 0;
-            int typeCount = 0;
-            for (int r = 0; r < row - 1; r++)
+            chainCount++;
+            if (OnChain != null)
             {
-                if (SquareMap[r, c] == null || !SquareMap[r, c].CanVerticalRemove())
-                {
-                    continue;
-                }
-                else
-                {
-                    firstType = SquareMap[r, c].Type;
-                    typeCount = 1;
-                }
-
-                int i = r + 1;
-                for (i = r + 1; i < row; i++)
-                {
-                    SquareSprite checkingSuqare = SquareMap[i, c];
-                    if (checkingSuqare != null && checkingSuqare.Type == firstType && checkingSuqare.CanVerticalRemove())
-                    {
-                        typeCount++;
-                    }
-                    else
-                    {
-                        if (typeCount >= 3)
-                        {
-                            RemoveData removeData = new RemoveData();
-                            removeData.StartRow = r;
-                            removeData.StartColumn = c;
-                            removeData.Count = typeCount;
-                            removeData.Dir = RemoveDir.Vertical;
-                            Remove(removeData);
-                            RemoveConnectedBlock(removeData);
-                        }
-                        //Debug.LogFormat("第{0}列，第{1}行,重复数量{2}", c, r, typeCount);
-                        break;
-                    }
-                }
-
-                SquareSprite lastSquare = SquareMap[i - 1, c];
-                if (typeCount >= 3 && i == row && lastSquare != null && lastSquare.CanVerticalRemove())
-                {
-                    RemoveData removeData = new RemoveData();
-                    removeData.StartRow = r;
-                    removeData.StartColumn = c;
-                    removeData.Count = typeCount;
-                    removeData.Dir = RemoveDir.Vertical;
-                    Remove(removeData);
-                    RemoveConnectedBlock(removeData);
-                    // Debug.LogFormat("第{0}行，第{1}列,重复数量{2}",r,c,typeCount);
-                }
+                OnChain(chainCount);
             }
-            //Debug.LogFormat("第{0}列，第{1}行,重复数量{2}", c, mapData.GetLength(0), 1);
+        }
+        else
+        {
+            chainCount = 1;
         }
     }
 
     //移除与消除方块相连接的障碍方块
     private void RemoveConnectedBlock(RemoveData removeData)
     {
-        for (int i = 0; i < removeData.Count; i++)
+        for (int i = 0; i < removeData.RemoveList.Count; i++)
         {
             SquareSprite left = null;
             SquareSprite right = null;
             SquareSprite above = null;
             SquareSprite under = null;
-            SquareSprite squareNeedRemove = null;
-
-            if (removeData.Dir == RemoveDir.Horizontal)
-            {
-                squareNeedRemove = SquareMap[removeData.StartRow, removeData.StartColumn + i];
-            }
-            else
-            {
-                squareNeedRemove = SquareMap[removeData.StartRow + i, removeData.StartColumn];
-            }
+            SquareSprite squareNeedRemove = removeData.RemoveList[i];
 
             //获取上下左右的方块
             if (squareNeedRemove != null)
@@ -770,10 +767,10 @@ public class PlayerBase : MonoBehaviour
                     under = SquareMap[squareNeedRemove.Row + 1, squareNeedRemove.Column];
                 }
                 
-                RemoveBlock(left);
-                RemoveBlock(right);
-                RemoveBlock(above);
-                RemoveBlock(under);
+                RemoveBlockIfContainSquare(left);
+                RemoveBlockIfContainSquare(right);
+                RemoveBlockIfContainSquare(above);
+                RemoveBlockIfContainSquare(under);
             }
         }
     }
@@ -782,7 +779,7 @@ public class PlayerBase : MonoBehaviour
     /// 检查方块是否是在障碍方块之中
     /// </summary>
     /// <param name="squareInBlock">检查的方块</param>
-    private void RemoveBlock(SquareSprite squareInBlock)
+    private void RemoveBlockIfContainSquare(SquareSprite squareInBlock)
     {
         if (squareInBlock != null && 
             squareInBlock.State == SquareState.Hide && 
@@ -798,10 +795,17 @@ public class PlayerBase : MonoBehaviour
     {
         removingDataList.Add(removeData);
 
-        //移除方块指针存储到List列表中，防止移除过程中增加行引起方块的列和行变化导致根据行,列获取的方块不正确
-        removeData.ConvertToList(SquareMap);
+        //消除相连接的障碍方块
+        RemoveConnectedBlock(removeData);
+        
         //标记方块为移除，避免重复检测
         MarkWillRemove(removeData);
+
+        //计算连消
+        CalculateChain(removeData);
+
+        //计算分数
+        CalculateScore(removeData);
 
         //移除方块协程
         StartCoroutine(RemoveCorutine(removeData));
@@ -814,7 +818,6 @@ public class PlayerBase : MonoBehaviour
     private void MarkWillRemove(RemoveData removeData)
     {
         bool chain = false;
-
         for (int i = 0; i < removeData.RemoveList.Count; i++)
         {
             SquareSprite squareNeedRemove = removeData.RemoveList[i];
@@ -823,22 +826,20 @@ public class PlayerBase : MonoBehaviour
             {
                 chain = true;
             }
-            if (!removingSquareList.Contains(squareNeedRemove))
-            {
-                removingSquareList.Add(squareNeedRemove);
-            }
         }
 
         //计算连消
         if (chain)
         {
             chainCount++;
-            chainInterval = removeData.Count * 2;
-            chainTimer = 0f;
             if (OnChain != null)
             {
                 OnChain(chainCount);
             }
+        }
+        else
+        {
+            chainCount = 1;
         }
     }
 
@@ -847,6 +848,18 @@ public class PlayerBase : MonoBehaviour
     {
         //在协程中一个一个移除
         yield return new WaitForSeconds(GameSetting.RemoveSquareDelay);
+
+        int soundIndex = 1;
+        if (chainCount == 1)
+        {
+            soundIndex = 1;
+        }
+        else
+        {
+            soundIndex  = chainCount <= 3 ? chainCount - 1 : 3;
+        }
+       
+        SoundMng.Instance.PlaySound("Audio/Basic_Matching_" + soundIndex);
 
         //播放移除方块特效
         for (int i = 0; i < removeData.RemoveList.Count; i++)
@@ -946,6 +959,7 @@ public class PlayerBase : MonoBehaviour
     //移动的距离
     private float moveDistance = 0;
 
+    //当前移动间隔记录，加速前记录，加速之后恢复速度
     private float currentMoveIntervalRecord;
 
     //更新所有方块和障碍方块的状态
@@ -999,7 +1013,6 @@ public class PlayerBase : MonoBehaviour
                 GameOver();
             }
 
-
             moveIntervalTimer = 0;
             moveDistance += GameSetting.BaseMapMoveSpeed;
             Vector3 curPos = squareRoot.localPosition;
@@ -1018,15 +1031,12 @@ public class PlayerBase : MonoBehaviour
     public virtual void PlayerUpdate()
     {
         UpdateSquareStatistic();
-        CheckRemove2();
+        CheckRemove();
         UpdateState();
         MoveMap();
     }
 
-    public bool IsGameOver()
-    {
-        return gameOver;
-    }
+ 
 
     //是否到达顶部
     public bool IsReachTop()

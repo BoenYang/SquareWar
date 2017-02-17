@@ -74,7 +74,7 @@ public class SquareSprite : MonoBehaviour
 
         sr.sortingLayerName = "Game";
         sr.sortingOrder = 3;
-        sr.sprite = Resources.Load<Sprite>("sg" + type);
+        sr.sprite = Resources.Load<Sprite>("Texture/Game/sg" + type);
 
         sr.material = Resources.Load<Material>("Materials/SpriteWithStencil");
 
@@ -161,7 +161,7 @@ public class SquareSprite : MonoBehaviour
 
     public void ShowRemoveEffect()
     {
-        GameObject effectObj = Resources.Load<GameObject>("Effect/" + effectDict[Type]);
+        GameObject effectObj = Resources.Load<GameObject>("Prefab/Effect/" + effectDict[Type]);
         GameObject effect = Instantiate(effectObj, gameObject.transform.position, Quaternion.identity) as GameObject;
 
         Destroy(effect,1.0f);
