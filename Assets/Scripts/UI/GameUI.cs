@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using DG.Tweening;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -72,6 +74,7 @@ public class GameUI : MonoBehaviour
     public void OnBackClick()
     {
         GameScene.Instance.StopGame();
+        SoundMng.Instance.StopMusic();
         MapMng.Instance.ClearAllPlayer();
         UIController.Ins.ShowMainUI();
     }
@@ -117,4 +120,30 @@ public class GameUI : MonoBehaviour
         GameScene.Instance.Game.LocalPlayer.StopAddSpeed();
     }
 
+    public void ShowChainRemoveTextAtPos(Vector3 pos, int chainCount)
+    {
+        Vector3 txtPos = Camera.main.WorldToScreenPoint(pos);
+        txtPos = UIController.Ins.canvas.worldCamera.ScreenToWorldPoint(txtPos);
+        txtPos.z = 0;
+
+        GameObject txtGo = Instantiate(Resources.Load<GameObject>("Prefab/Effect/ChainText"));
+        txtGo.transform.localScale = Vector3.zero;
+        txtGo.transform.SetParent(transform);
+        txtGo.transform.position = txtPos;
+        txtGo.layer = gameObject.layer;
+
+        CanvasGroup cg = txtGo.GetComponent<CanvasGroup>();
+        
+        Text txt = txtGo.GetComponentInChildren<Text>();
+        txt.text = "+22";
+
+        Sequence seq = DOTween.Sequence();
+        seq.Append(txtGo.transform.DOScale(Vector3.one, 0.2f).SetEase(Ease.OutBack));
+        seq.AppendInterval(0.5f);
+        seq.Append(DOTween.To(() =>{ return cg.alpha;}, (a) =>{ cg.alpha = a;},0,0.2f));
+        seq.AppendCallback(() =>
+        {
+            Destroy(txtGo);
+        });
+    }
 }

@@ -15,7 +15,7 @@ public class PlayerBase : MonoBehaviour
 
     public delegate void GetScoreDelegate(int addScore);
 
-    public delegate void ChainDelegate(int chainCount);
+    public delegate void ChainDelegate(int chainCount,Vector3 pos);
 
     public delegate void GameOverDelegate();
 
@@ -724,6 +724,7 @@ public class PlayerBase : MonoBehaviour
     private void CalculateChain(RemoveData removeData)
     {
         bool chain = false;
+        Vector3 chainPos = removeData.RemoveList[0].transform.position; 
         for (int i = 0; i < removeData.RemoveList.Count; i++)
         {
             SquareSprite squareNeedRemove = removeData.RemoveList[i];
@@ -739,7 +740,7 @@ public class PlayerBase : MonoBehaviour
             chainCount++;
             if (OnChain != null)
             {
-                OnChain(chainCount);
+                OnChain(chainCount,chainPos);
             }
         }
         else
@@ -832,29 +833,10 @@ public class PlayerBase : MonoBehaviour
     /// <param name="removeData"></param>
     private void MarkWillRemove(RemoveData removeData)
     {
-        bool chain = false;
         for (int i = 0; i < removeData.RemoveList.Count; i++)
         {
             SquareSprite squareNeedRemove = removeData.RemoveList[i];
             squareNeedRemove.MarkWillRemove();
-            if (squareNeedRemove.Chain)
-            {
-                chain = true;
-            }
-        }
-
-        //计算连消
-        if (chain)
-        {
-            chainCount++;
-            if (OnChain != null)
-            {
-                OnChain(chainCount);
-            }
-        }
-        else
-        {
-            chainCount = 1;
         }
     }
 
@@ -1050,8 +1032,6 @@ public class PlayerBase : MonoBehaviour
         UpdateState();
         MoveMap();
     }
-
- 
 
     //是否到达顶部
     public bool IsReachTop()

@@ -7,12 +7,15 @@ public class UIController : MonoBehaviour
 
     public GameObject MainUI;
 
+    public Canvas canvas;
+
     public static UIController Ins;
 
     void Awake()
     {
         Ins = this;
         ShowMainUI();
+        canvas = GetComponent<Canvas>();
     }
 
     public void ShowMainUI()

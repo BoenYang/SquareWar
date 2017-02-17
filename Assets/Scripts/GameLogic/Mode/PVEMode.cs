@@ -79,17 +79,9 @@ public class PVEMode : GameModeBase
         AddBlock(robotPlayer, addScore);
     }
 
-    private void OnPlayerChain(int chain)
+    private void OnPlayerChain(int chain, Vector3 pos)
     {
-        if (chain > 1)
-        {
-            GameUI.Ins.Player1Chain.gameObject.SetActive(true);
-            GameUI.Ins.Player1Chain.text = "连击+" + chain;
-        }
-        else
-        {
-            GameUI.Ins.Player1Chain.gameObject.SetActive(false);
-        }
+        GameUI.Ins.ShowChainRemoveTextAtPos(pos,chain);
     }
 
     private void OnRobotGetScore(int addScore)
@@ -108,7 +100,7 @@ public class PVEMode : GameModeBase
         }
     }
 
-    private void OnRobotChain(int chain)
+    private void OnRobotChain(int chain,Vector3 pos)
     {
         if (chain > 1)
         {
