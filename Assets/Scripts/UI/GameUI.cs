@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using DG.Tweening;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -135,7 +134,7 @@ public class GameUI : MonoBehaviour
         CanvasGroup cg = txtGo.GetComponent<CanvasGroup>();
         
         Text txt = txtGo.GetComponentInChildren<Text>();
-        txt.text = "+22";
+        txt.text = "连消+" + chainCount;
 
         Sequence seq = DOTween.Sequence();
         seq.Append(txtGo.transform.DOScale(Vector3.one, 0.2f).SetEase(Ease.OutBack));
